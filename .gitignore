@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+*.venv
+
+# Env files (keep .env.production for frontend, never commit secrets)
+backend/.env
+
+# Cache
+.venustracker/
+*.diskcache/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# iOS / Xcode
+frontend/ios/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store

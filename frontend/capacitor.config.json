@@ -1,0 +1,7 @@
+{
+  "appId": "com.joshuaharrington.venustracker",
+  "appName": "Venus Tracker",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" },
+  "ios": { "contentInset": "automatic" }
+}
