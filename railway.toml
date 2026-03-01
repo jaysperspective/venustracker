@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pip install -r backend/requirements.txt"
+buildCommand = "pip install -e . && pip install -r backend/requirements.txt"
 
 [deploy]
-startCommand = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
-healthcheckPath = "/api/venus"
-healthcheckTimeout = 60
+startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
 restartPolicyType = "on_failure"
