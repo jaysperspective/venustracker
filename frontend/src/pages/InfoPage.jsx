@@ -295,7 +295,7 @@ export default function InfoPage() {
 
   return (
     <>
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 20px 100px' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', paddingTop: 'max(28px, env(safe-area-inset-top))', paddingLeft: '20px', paddingRight: '20px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
 
       {/* Hero */}
       <div style={{ textAlign: 'center', marginBottom: 44 }}>

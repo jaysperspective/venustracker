@@ -146,7 +146,10 @@ export default function NewsPage() {
 
   return (
     <main style={{
-      padding: '16px 16px 100px',
+      paddingTop: 'max(16px, env(safe-area-inset-top))',
+      paddingLeft: '16px',
+      paddingRight: '16px',
+      paddingBottom: 'calc(100px + env(safe-area-inset-bottom))',
       minHeight: '100vh',
       boxSizing: 'border-box',
       background: '#2B2B1C',
