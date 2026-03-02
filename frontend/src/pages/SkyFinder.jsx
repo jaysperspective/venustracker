@@ -167,7 +167,7 @@ function ElevationBar({ venusAlt, deviceElevation }) {
 
 // ─── Compass view ─────────────────────────────────────────────────────────────
 
-function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff }) {
+function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff, compassAccuracy }) {
   const CX = 150, CY = 150
   const RING_R = 126
 
@@ -295,6 +295,24 @@ function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff }) {
         {hint}
       </div>
 
+      {/* Calibration warning */}
+      {(compassAccuracy < 0 || compassAccuracy > 20) && (
+        <div style={{
+          fontSize: '0.72rem',
+          color: 'rgba(255,180,80,0.9)',
+          fontFamily: '-apple-system, sans-serif',
+          textAlign: 'center',
+          padding: '6px 12px',
+          background: 'rgba(255,140,0,0.1)',
+          borderRadius: 8,
+          border: '0.5px solid rgba(255,140,0,0.25)',
+        }}>
+          {compassAccuracy < 0
+            ? 'Compass uncalibrated — move phone in a figure-8'
+            : `Compass accuracy ±${Math.round(compassAccuracy)}° — move phone in a figure-8`}
+        </div>
+      )}
+
       {/* Elevation bar */}
       <ElevationBar venusAlt={venusAlt} deviceElevation={deviceElevation} />
     </div>
@@ -324,7 +342,7 @@ function CornerBrackets() {
 
 // ─── Viewfinder view ──────────────────────────────────────────────────────────
 
-function ViewfinderView({ azDiff, altDiff, locked }) {
+function ViewfinderView({ azDiff, altDiff, locked, videoRef, cameraError }) {
   // Map angle difference to percentage offset (clamped)
   const azClamped  = Math.max(-90, Math.min(90, azDiff))
   const altClamped = Math.max(-60, Math.min(60, altDiff))
@@ -347,6 +365,39 @@ function ViewfinderView({ azDiff, altDiff, locked }) {
       background: '#080806',
       border: `1px solid rgba(200,184,112,0.12)`,
     }}>
+      {/* Live camera feed */}
+      {!cameraError && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
+      {cameraError && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 8,
+        }}>
+          <span style={{ fontSize: '1.4rem' }}>📷</span>
+          <span style={{ fontSize: '0.72rem', color: CREAM_DIM, fontFamily: 'Georgia, serif', textAlign: 'center', padding: '0 24px' }}>
+            Camera unavailable — check Settings → Privacy → Camera
+          </span>
+        </div>
+      )}
+
       <CornerBrackets />
 
       {/* Grid lines */}
@@ -501,11 +552,15 @@ function StatsRow({ azimuth, altitude, illumination, elongation }) {
 
 export default function SkyFinder({ data, loading, error }) {
   // null = checking, 'prompt' | 'granted' | 'denied' | 'unavailable'
-  const [permission, setPermission] = useState(null)
-  const [mode, setMode]             = useState('compass')
-  const [alpha, setAlpha]           = useState(0)   // compass heading 0–360
-  const [beta, setBeta]             = useState(90)  // tilt; 90 = vertical portrait
-  const lastUpdate                  = useRef(0)
+  const [permission, setPermission]       = useState(null)
+  const [mode, setMode]                   = useState('compass')
+  const [alpha, setAlpha]                 = useState(0)   // compass heading 0–360
+  const [beta, setBeta]                   = useState(90)  // tilt; 90 = vertical portrait
+  const [compassAccuracy, setCompassAccuracy] = useState(-1) // -1 = unknown
+  const [cameraError, setCameraError]     = useState(false)
+  const lastUpdate                        = useRef(0)
+  const videoRef                          = useRef(null)
+  const streamRef                         = useRef(null)
 
   // Detect permission requirement on mount
   useEffect(() => {
@@ -526,13 +581,48 @@ export default function SkyFinder({ data, loading, error }) {
       const now = Date.now()
       if (now - lastUpdate.current < 50) return  // ~20 fps
       lastUpdate.current = now
-      if (e.alpha != null) setAlpha(e.alpha)
+      // webkitCompassHeading is true-north referenced on iOS;
+      // e.alpha is only an arbitrary-reference fallback for Android.
+      const heading = e.webkitCompassHeading ?? e.alpha
+      if (heading != null) setAlpha(heading)
       if (e.beta  != null) setBeta(e.beta)
+      if (e.webkitCompassAccuracy != null) setCompassAccuracy(e.webkitCompassAccuracy)
     }
 
     window.addEventListener('deviceorientation', handler, true)
     return () => window.removeEventListener('deviceorientation', handler, true)
   }, [permission])
+
+  // Camera — only active in viewfinder mode
+  useEffect(() => {
+    if (mode !== 'viewfinder' || permission !== 'granted') {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop())
+        streamRef.current = null
+      }
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError(true)
+      return
+    }
+    let cancelled = false
+    setCameraError(false)
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return }
+        streamRef.current = stream
+        if (videoRef.current) videoRef.current.srcObject = stream
+      })
+      .catch(() => { if (!cancelled) setCameraError(true) })
+    return () => {
+      cancelled = true
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop())
+        streamRef.current = null
+      }
+    }
+  }, [mode, permission])
 
   async function requestPermission() {
     try {
@@ -657,9 +747,16 @@ export default function SkyFinder({ data, loading, error }) {
             venusAlt={venusAlt}
             deviceElevation={deviceElevation}
             azDiff={azDiff}
+            compassAccuracy={compassAccuracy}
           />
         ) : (
-          <ViewfinderView azDiff={azDiff} altDiff={altDiff} locked={locked} />
+          <ViewfinderView
+            azDiff={azDiff}
+            altDiff={altDiff}
+            locked={locked}
+            videoRef={videoRef}
+            cameraError={cameraError}
+          />
         )}
       </div>
 
