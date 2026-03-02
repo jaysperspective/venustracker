@@ -6,8 +6,9 @@ import EventsList from './components/EventsList.jsx'
 import EphemerisChart from './components/EphemerisChart.jsx'
 import CalendarGrid from './components/CalendarGrid.jsx'
 import BottomNav from './components/BottomNav.jsx'
-const InfoPage = lazy(() => import('./pages/InfoPage.jsx'))
-const NewsPage = lazy(() => import('./pages/NewsPage.jsx'))
+const InfoPage   = lazy(() => import('./pages/InfoPage.jsx'))
+const NewsPage   = lazy(() => import('./pages/NewsPage.jsx'))
+const SkyFinder  = lazy(() => import('./pages/SkyFinder.jsx'))
 import {
   fetchVenus,
   fetchEvents,
@@ -94,6 +95,12 @@ export default function App() {
 
           <EventsList data={events.data} loading={events.loading} error={events.error} />
         </main>
+      )}
+
+      {tab === 'sky' && (
+        <Suspense fallback={suspenseFallback}>
+          <SkyFinder data={venus.data} loading={venus.loading} error={venus.error} />
+        </Suspense>
       )}
 
       {tab === 'info' && (

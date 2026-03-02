@@ -12,6 +12,24 @@ const TABS = [
     ),
   },
   {
+    id: 'sky',
+    label: 'Sky',
+    icon: (active) => {
+      const c = active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'
+      return (
+        // Compass rose — circle with N/S needle
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={c} strokeWidth="1.5" />
+          {/* North needle (filled) */}
+          <path d="M12 4.5 L14 11.5 L12 10.5 L10 11.5 Z" fill={c} />
+          {/* South needle (dimmed) */}
+          <path d="M12 19.5 L14 12.5 L12 13.5 L10 12.5 Z" fill={c} opacity="0.38" />
+          <circle cx="12" cy="12" r="1.8" fill={c} />
+        </svg>
+      )
+    },
+  },
+  {
     id: 'info',
     label: 'Guide',
     icon: (active) => (
