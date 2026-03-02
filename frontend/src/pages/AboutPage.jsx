@@ -42,7 +42,7 @@ export default function AboutPage() {
           fontSize: '0.8rem',
           color: 'var(--dark-muted)',
         }}>
-          Built by Joshua Harrington
+          Created by Esaias
         </p>
       </div>
 

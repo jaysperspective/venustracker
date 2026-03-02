@@ -7,6 +7,7 @@ const CREAM     = 'rgba(245,240,232,0.88)'
 const CREAM_DIM = 'rgba(245,240,232,0.45)'
 const MOON_C    = 'rgba(220,215,200,0.9)'
 const MOON_DIM  = 'rgba(220,215,200,0.35)'
+const SUN_C     = '#f0c040'
 
 // ─── FOV constants (portrait phone) ──────────────────────────────────────────
 
@@ -39,54 +40,54 @@ const STARS = [
   { name: 'Vega',        ra: 279.235, dec:  38.784, mag:  0.03 },
   { name: 'Capella',     ra:  79.172, dec:  45.998, mag:  0.08 },
   { name: 'Rigel',       ra:  78.634, dec:  -8.202, mag:  0.13 },
-  { name: 'Procyon',     ra: 114.825, dec:   5.227, mag:  0.37 },
+  { name: 'Procyon',     ra: 114.827, dec:   5.225, mag:  0.34 },
+  { name: 'Betelgeuse',  ra:  88.793, dec:   7.407, mag:  0.42 },
   { name: 'Achernar',    ra:  24.429, dec: -57.237, mag:  0.46 },
-  { name: 'Betelgeuse',  ra:  88.793, dec:   7.407, mag:  0.50 },
   { name: 'Hadar',       ra: 210.956, dec: -60.373, mag:  0.61 },
   { name: 'Altair',      ra: 297.696, dec:   8.868, mag:  0.77 },
   { name: 'Acrux',       ra: 186.650, dec: -63.099, mag:  0.77 },
   { name: 'Aldebaran',   ra:  68.980, dec:  16.509, mag:  0.85 },
-  { name: 'Spica',       ra: 201.298, dec: -11.161, mag:  0.98 },
-  { name: 'Antares',     ra: 247.352, dec: -26.432, mag:  1.06 },
+  { name: 'Antares',     ra: 247.352, dec: -26.432, mag:  0.96 },
+  { name: 'Spica',       ra: 201.298, dec: -11.161, mag:  1.04 },
   { name: 'Pollux',      ra: 116.329, dec:  28.026, mag:  1.14 },
   { name: 'Fomalhaut',   ra: 344.413, dec: -29.622, mag:  1.16 },
   { name: 'Deneb',       ra: 310.358, dec:  45.280, mag:  1.25 },
   { name: 'Mimosa',      ra: 191.930, dec: -59.689, mag:  1.25 },
   { name: 'Regulus',     ra: 152.093, dec:  11.967, mag:  1.35 },
   { name: 'Adhara',      ra: 104.656, dec: -28.972, mag:  1.50 },
-  { name: 'Castor',      ra: 113.650, dec:  31.888, mag:  1.57 },
-  { name: 'Shaula',      ra: 263.402, dec: -37.104, mag:  1.62 },
+  { name: 'Castor',      ra: 113.650, dec:  31.888, mag:  1.58 },
+  { name: 'Gacrux',      ra: 187.791, dec: -57.113, mag:  1.63 },
+  { name: 'Shaula',      ra: 263.402, dec: -37.104, mag:  1.63 },
   { name: 'Bellatrix',   ra:  81.283, dec:   6.350, mag:  1.64 },
-  { name: 'Gacrux',      ra: 187.791, dec: -57.113, mag:  1.64 },
   { name: 'Elnath',      ra:  81.573, dec:  28.608, mag:  1.65 },
-  { name: 'Alnilam',     ra:  84.053, dec:  -1.202, mag:  1.70 },
-  { name: 'Alnair',      ra: 332.058, dec: -46.961, mag:  1.73 },
-  { name: 'Alnitak',     ra:  85.190, dec:  -1.943, mag:  1.74 },
-  { name: 'Alioth',      ra: 193.507, dec:  55.960, mag:  1.76 },
-  { name: 'Mirfak',      ra:  51.081, dec:  49.861, mag:  1.79 },
+  { name: 'Miaplacidus', ra: 138.300, dec: -69.717, mag:  1.68 },
+  { name: 'Alnilam',     ra:  84.053, dec:  -1.202, mag:  1.69 },
+  { name: 'Alnair',      ra: 332.058, dec: -46.961, mag:  1.74 },
+  { name: 'Alnitak',     ra:  85.190, dec:  -1.943, mag:  1.77 },
+  { name: 'Alioth',      ra: 193.507, dec:  55.960, mag:  1.77 },
   { name: 'Dubhe',       ra: 165.932, dec:  61.751, mag:  1.79 },
+  { name: 'Mirfak',      ra:  51.081, dec:  49.861, mag:  1.80 },
+  { name: 'Kaus Aust.',  ra: 276.043, dec: -34.384, mag:  1.80 },
   { name: 'Wezen',       ra: 107.098, dec: -26.393, mag:  1.84 },
-  { name: 'Kaus Aust',   ra: 276.043, dec: -34.385, mag:  1.85 },
-  { name: 'Avior',       ra: 125.628, dec: -59.510, mag:  1.86 },
   { name: 'Alkaid',      ra: 206.885, dec:  49.313, mag:  1.86 },
   { name: 'Sargas',      ra: 264.330, dec: -42.998, mag:  1.87 },
-  { name: 'Atria',       ra: 253.417, dec: -69.028, mag:  1.92 },
+  { name: 'Avior',       ra: 125.629, dec: -59.509, mag:  1.86 },
+  { name: 'Menkalinan',  ra:  89.882, dec:  44.948, mag:  1.90 },
+  { name: 'Atria',       ra: 252.166, dec: -69.028, mag:  1.92 },
+  { name: 'Alhena',      ra:  99.428, dec:  16.399, mag:  1.93 },
   { name: 'Peacock',     ra: 306.412, dec: -56.735, mag:  1.94 },
-  { name: 'Alsephina',   ra: 131.176, dec: -54.709, mag:  1.96 },
-  { name: 'Polaris',     ra:  37.955, dec:  89.264, mag:  1.97 },
+  { name: 'Polaris',     ra:  37.954, dec:  89.264, mag:  1.98 },
   { name: 'Mirzam',      ra:  95.675, dec: -17.956, mag:  1.98 },
-  { name: 'Alphard',     ra: 141.897, dec:  -8.659, mag:  1.99 },
-  { name: 'Hamal',       ra:  31.793, dec:  23.462, mag:  2.00 },
-  { name: 'Saiph',       ra:  86.939, dec:  -9.670, mag:  2.07 },
-  { name: 'Kochab',      ra: 222.676, dec:  74.156, mag:  2.07 },
+  { name: 'Alphard',     ra: 141.897, dec:  -8.659, mag:  1.98 },
+  { name: 'Hamal',       ra:  31.793, dec:  23.463, mag:  2.00 },
+  { name: 'Diphda',      ra:  10.897, dec: -17.987, mag:  2.02 },
+  { name: 'Nunki',       ra: 283.816, dec: -26.297, mag:  2.02 },
+  { name: 'Menkent',     ra: 211.671, dec: -36.370, mag:  2.06 },
+  { name: 'Saiph',       ra:  86.939, dec:  -9.670, mag:  2.09 },
+  { name: 'Alpheratz',   ra:   2.097, dec:  29.091, mag:  2.06 },
+  { name: 'Mirach',      ra:  17.433, dec:  35.621, mag:  2.05 },
+  { name: 'Kochab',      ra: 222.677, dec:  74.155, mag:  2.08 },
   { name: 'Rasalhague',  ra: 263.734, dec:  12.560, mag:  2.08 },
-  { name: 'Almach',      ra:  30.975, dec:  42.330, mag:  2.10 },
-  { name: 'Denebola',    ra: 177.265, dec:  14.572, mag:  2.14 },
-  { name: 'Algol',       ra:  47.042, dec:  40.956, mag:  2.12 },
-  { name: 'Nunki',       ra: 283.816, dec: -26.297, mag:  2.05 },
-  { name: 'Schedar',     ra:  10.127, dec:  56.537, mag:  2.24 },
-  { name: 'Caph',        ra:   2.295, dec:  59.150, mag:  2.27 },
-  { name: 'Eltanin',     ra: 269.152, dec:  51.489, mag:  2.23 },
   { name: 'Mintaka',     ra:  83.002, dec:  -0.299, mag:  2.25 },
   { name: 'Merak',       ra: 165.460, dec:  56.383, mag:  2.37 },
 ]
@@ -96,8 +97,12 @@ const STARS = [
 function raDecToAzAlt(ra, dec, lat, lon) {
   const now = new Date()
   const JD = now.getTime() / 86400000 + 2440587.5
-  const T = (JD - 2451545.0) / 36525
-  const GMST_h = 6.697374558 + 2400.0513369 * T + 0.0000258622 * T * T
+  // Split into 0h UT Julian Date and UT hours — the GMST polynomial
+  // is only valid for T₀ at 0h UT; current UT must be added separately.
+  const JD0 = Math.floor(JD - 0.5) + 0.5
+  const T0 = (JD0 - 2451545.0) / 36525
+  const UT = (JD - JD0) * 24                // current UT in hours
+  const GMST_h = 6.697374558 + 2400.0513369 * T0 + 0.0000258622 * T0 * T0 + UT * 1.00273790935
   const LST = ((GMST_h * 15 + lon) % 360 + 360) % 360
   const HA = ((LST - ra) % 360 + 360) % 360
   const hRad = HA  * Math.PI / 180
@@ -184,6 +189,131 @@ function PermissionScreen({ onRequest, state }) {
           Enable Compass
         </button>
       )}
+    </div>
+  )
+}
+
+// ─── Calibration screen ──────────────────────────────────────────────────────
+
+function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibrate }) {
+  const moonAbove = moonData?.altitude != null && moonData.altitude > 0
+  const sunAbove  = sunData?.altitude  != null && sunData.altitude  > 0
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#080806' }}>
+      {/* Camera feed */}
+      {!cameraError && (
+        <video
+          ref={videoRef}
+          autoPlay playsInline muted
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      )}
+      {cameraError && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ fontSize: '0.78rem', color: CREAM_DIM, fontFamily: 'Georgia, serif', textAlign: 'center', padding: '0 24px' }}>
+            Camera unavailable — the sky will still calibrate from your compass heading.
+          </span>
+        </div>
+      )}
+
+      {/* Crosshair overlay */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3 }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 80, height: 80 }}>
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: GOLD, opacity: 0.5, transform: 'translateY(-50%)' }} />
+            <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: GOLD, opacity: 0.5, transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', top: '50%', left: '50%', width: 8, height: 8, borderRadius: '50%', border: `1.5px solid ${GOLD}`, opacity: 0.6, transform: 'translate(-50%, -50%)' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+        paddingTop: 'max(20px, env(safe-area-inset-top))',
+        paddingLeft: 20, paddingRight: 20, paddingBottom: 30,
+        background: 'linear-gradient(to bottom, rgba(8,8,6,0.85) 0%, rgba(8,8,6,0.5) 70%, transparent 100%)',
+        textAlign: 'center',
+      }}>
+        <h2 style={{
+          fontFamily: 'Georgia, serif', fontWeight: 'normal',
+          color: CREAM, fontSize: '1.15rem', letterSpacing: '0.04em', marginBottom: 8,
+        }}>
+          Calibrate Sky
+        </h2>
+        <p style={{
+          color: CREAM_DIM, fontSize: '0.82rem', lineHeight: 1.6, maxWidth: 300, margin: '0 auto',
+        }}>
+          Point the crosshairs at the {moonAbove && sunAbove ? 'Moon or Sun' : moonAbove ? 'Moon' : sunAbove ? 'Sun' : 'Moon or Sun'}, then tap the matching button below.
+        </p>
+      </div>
+
+      {/* Buttons */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
+        paddingBottom: 'max(30px, env(safe-area-inset-bottom))',
+        paddingTop: 20,
+        background: 'linear-gradient(to top, rgba(8,8,6,0.85) 0%, rgba(8,8,6,0.5) 70%, transparent 100%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+      }}>
+        <div style={{ display: 'flex', gap: 14, justifyContent: 'center' }}>
+          {moonAbove && (
+            <button
+              onClick={() => onCalibrate('moon')}
+              style={{
+                background: 'rgba(220,215,200,0.12)',
+                border: `1.5px solid ${MOON_C}`,
+                borderRadius: 28, padding: '14px 32px',
+                color: MOON_C, fontSize: '0.88rem',
+                fontFamily: 'Georgia, serif', fontWeight: 600,
+                letterSpacing: '0.05em', cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Moon
+            </button>
+          )}
+          {sunAbove && (
+            <button
+              onClick={() => onCalibrate('sun')}
+              style={{
+                background: 'rgba(240,192,64,0.1)',
+                border: `1.5px solid ${SUN_C}`,
+                borderRadius: 28, padding: '14px 32px',
+                color: SUN_C, fontSize: '0.88rem',
+                fontFamily: 'Georgia, serif', fontWeight: 600,
+                letterSpacing: '0.05em', cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Sun
+            </button>
+          )}
+        </div>
+
+        {!moonAbove && !sunAbove && (
+          <p style={{ color: CREAM_DIM, fontSize: '0.78rem', fontFamily: 'Georgia, serif', textAlign: 'center', maxWidth: 280 }}>
+            Neither the Moon nor the Sun is above the horizon right now. Tap below to use compass heading instead.
+          </p>
+        )}
+
+        <button
+          onClick={() => onCalibrate('skip')}
+          style={{
+            background: 'transparent', border: 'none',
+            color: CREAM_DIM, fontSize: '0.75rem',
+            fontFamily: 'Georgia, serif', letterSpacing: '0.04em',
+            cursor: 'pointer', padding: '6px 16px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Skip — use compass only
+        </button>
+      </div>
     </div>
   )
 }
@@ -424,11 +554,10 @@ function FullscreenViewfinder({
   venusAz, venusAlt, venusIllum, venusElong,
   moonAz, moonAlt, moonIllum,
   starAzAltsRef, constAzAltsRef,
-  compassOffset, compassOffsetState, onResetOffset,
-  calibrating, setCalibrating, onSetCalibration,
+  compassOffset,
   locked, videoRef, cameraError,
   azDiff, altDiff,
-  onBack,
+  onBack, onRecalibrate,
 }) {
   const dotRef         = useRef(null)
   const moonDotRef     = useRef(null)
@@ -477,29 +606,22 @@ function FullscreenViewfinder({
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.clearRect(0, 0, W, H)
 
-        // Horizon — Y position where horizon crosses the screen
-        // horizY < 0  → horizon above screen (looking at sky, no ground visible)
-        // horizY > H  → horizon below screen (looking at ground, full screen is ground)
         const horizY = H * 0.5 + (devEl / V_FOV_HALF) * H * 0.5
 
         if (horizY >= H) {
-          // Entire frame is ground
           ctx.fillStyle = 'rgba(15,55,15,0.22)'
           ctx.fillRect(0, 0, W, H)
         } else if (horizY > 0) {
-          // Ground below the horizon line
           ctx.fillStyle = 'rgba(15,55,15,0.22)'
           ctx.fillRect(0, horizY, W, H - horizY)
-          // Glow + line at the horizon
           const g = ctx.createLinearGradient(0, horizY - 8, 0, horizY + 8)
           g.addColorStop(0, 'rgba(70,190,90,0)'); g.addColorStop(0.5, 'rgba(70,190,90,0.48)'); g.addColorStop(1, 'rgba(70,190,90,0)')
           ctx.fillStyle = g; ctx.fillRect(0, horizY - 8, W, 16)
           ctx.beginPath(); ctx.moveTo(0, horizY); ctx.lineTo(W, horizY)
           ctx.strokeStyle = 'rgba(70,190,90,0.6)'; ctx.lineWidth = 1; ctx.stroke()
         }
-        // horizY <= 0: looking at sky, no ground drawn at all
 
-        // Stars — use globalAlpha + one hex fillStyle to avoid per-frame string allocation
+        // Stars
         ctx.fillStyle = '#dcd7c8'
         ctx.textBaseline = 'middle'
         ctx.font = '9px -apple-system, sans-serif'
@@ -525,7 +647,7 @@ function FullscreenViewfinder({
           }
         }
 
-        // Constellation names — dim gold text at constellation center
+        // Constellation names
         ctx.font = '10px Georgia, serif'
         ctx.fillStyle = '#c8b870'
         for (const c of (constAzAltsRef.current ?? [])) {
@@ -580,24 +702,6 @@ function FullscreenViewfinder({
   const azHint  = Math.abs(azDiff)  < 3 ? null : azDiff  > 0 ? `Turn right ${azAbs}°` : `Turn left ${azAbs}°`
   const altHint = Math.abs(altDiff) < 3 ? null : altDiff > 0 ? `Tilt up ${altAbs}°`   : `Tilt down ${altAbs}°`
 
-  const handleMoonTap = () => {
-    if (calibrating) onSetCalibration()
-    else setCalibrating(true)
-  }
-
-  const outlineBtn = {
-    background: 'transparent',
-    border: `1px solid ${GOLD}`,
-    borderRadius: 20,
-    color: GOLD,
-    padding: '8px 20px',
-    fontSize: '0.78rem',
-    fontFamily: 'Georgia, serif',
-    letterSpacing: '0.05em',
-    cursor: 'pointer',
-    WebkitTapHighlightColor: 'transparent',
-  }
-
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#080806' }}>
       {/* Camera feed */}
@@ -613,20 +717,19 @@ function FullscreenViewfinder({
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          <span style={{ fontSize: '1.4rem' }}>📷</span>
           <span style={{ fontSize: '0.72rem', color: CREAM_DIM, fontFamily: 'Georgia, serif', textAlign: 'center', padding: '0 24px' }}>
             Camera unavailable — check Settings → Privacy → Camera
           </span>
         </div>
       )}
 
-      {/* Canvas: horizon + star field — RAF-driven, sits below overlay */}
+      {/* Canvas: horizon + star field */}
       <canvas
         ref={skyCanvasRef}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2 }}
       />
 
-      {/* Overlay — pointer-events none so touches pass through to camera */}
+      {/* Overlay */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3 }}>
         <CornerBrackets />
 
@@ -649,7 +752,7 @@ function FullscreenViewfinder({
           </div>
         </div>
 
-        {/* Venus dot — RAF-driven position */}
+        {/* Venus dot */}
         <div ref={dotRef} style={{
           position: 'absolute', left: '50%', top: '50%',
           transform: 'translate(-50%, -50%)',
@@ -675,26 +778,22 @@ function FullscreenViewfinder({
           <div style={{ textAlign: 'center', marginTop: 3, fontSize: '0.6rem', color: GOLD, fontFamily: 'Georgia, serif', whiteSpace: 'nowrap' }}>Venus</div>
         </div>
 
-        {/* Moon dot — pointer-events: auto so it's tappable */}
+        {/* Moon dot */}
         {hasMoon && (
           <div
             ref={moonDotRef}
-            onClick={handleMoonTap}
             style={{
               position: 'absolute', left: '50%', top: '50%',
               transform: 'translate(-50%, -50%)',
               zIndex: 5, display: 'flex', flexDirection: 'column', alignItems: 'center',
-              pointerEvents: 'auto', cursor: 'pointer',
             }}
           >
             <div style={{
               width: 26, height: 26, borderRadius: '50%',
-              background: calibrating ? 'rgba(220,215,200,0.2)' : MOON_DIM,
-              border: `1.5px solid ${calibrating ? MOON_C : 'rgba(220,215,200,0.55)'}`,
+              background: MOON_DIM,
+              border: `1.5px solid rgba(220,215,200,0.55)`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 13, color: MOON_C,
-              boxShadow: calibrating ? '0 0 16px rgba(220,215,200,0.55)' : 'none',
-              transition: 'box-shadow 0.25s, border-color 0.25s',
             }}>◑</div>
             <div style={{ textAlign: 'center', marginTop: 3, fontSize: '0.55rem', color: MOON_C, fontFamily: '-apple-system, sans-serif', whiteSpace: 'nowrap', opacity: 0.82 }}>
               Moon{moonIllum != null ? ` ${Math.round(moonIllum)}%` : ''}
@@ -724,18 +823,6 @@ function FullscreenViewfinder({
         >
           ← Compass
         </button>
-
-        {compassOffsetState !== 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'auto' }}>
-            <span style={{ fontSize: '0.7rem', color: MOON_C, fontFamily: '-apple-system, sans-serif' }}>
-              Moon offset {compassOffsetState > 0 ? '+' : ''}{Math.round(compassOffsetState)}°
-            </span>
-            <button
-              onClick={onResetOffset}
-              style={{ background: 'transparent', border: 'none', color: MOON_C, fontSize: '0.9rem', cursor: 'pointer', padding: '2px 4px' }}
-            >✕</button>
-          </div>
-        )}
       </div>
 
       {/* Lock badge */}
@@ -755,7 +842,7 @@ function FullscreenViewfinder({
       )}
 
       {/* Direction hints */}
-      {!calibrating && !locked && (azHint || altHint) && (
+      {!locked && (azHint || altHint) && (
         <div style={{
           position: 'absolute', bottom: 140, left: 0, right: 0,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
@@ -763,21 +850,6 @@ function FullscreenViewfinder({
         }}>
           {altHint && <span style={{ fontSize: '0.82rem', color: CREAM, fontFamily: 'Georgia, serif', opacity: 0.8 }}>{altDiff > 0 ? '↑ ' : '↓ '}{altHint}</span>}
           {azHint  && <span style={{ fontSize: '0.82rem', color: CREAM, fontFamily: 'Georgia, serif', opacity: 0.8 }}>{azDiff > 0 ? '' : ''}{azHint}{azDiff > 0 ? ' →' : ' ←'}</span>}
-        </div>
-      )}
-
-      {/* Calibration hint */}
-      {calibrating && (
-        <div style={{
-          position: 'absolute', bottom: 140, left: 0, right: 0,
-          textAlign: 'center', pointerEvents: 'none', zIndex: 10,
-        }}>
-          <span style={{
-            fontSize: '0.8rem', color: MOON_C, fontFamily: 'Georgia, serif',
-            background: 'rgba(8,8,6,0.65)', padding: '7px 18px', borderRadius: 20,
-          }}>
-            Point at Moon · tap Moon dot to SET
-          </span>
         </div>
       )}
 
@@ -807,23 +879,22 @@ function FullscreenViewfinder({
           ))}
         </div>
 
-        {/* Calibration button row */}
-        {hasMoon && moonAlt > 0 && (
-          <div style={{ padding: '0 20px 4px', display: 'flex', gap: 10, justifyContent: 'center' }}>
-            {!calibrating ? (
-              <button onClick={() => setCalibrating(true)} style={outlineBtn}>
-                Calibrate with Moon
-              </button>
-            ) : (
-              <button
-                onClick={() => setCalibrating(false)}
-                style={{ ...outlineBtn, borderColor: CREAM_DIM, color: CREAM_DIM }}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        )}
+        {/* Recalibrate button */}
+        <div style={{ padding: '0 20px 4px', display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <button
+            onClick={onRecalibrate}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${GOLD}`,
+              borderRadius: 20, color: GOLD,
+              padding: '8px 20px', fontSize: '0.78rem',
+              fontFamily: 'Georgia, serif', letterSpacing: '0.05em',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Recalibrate
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -846,8 +917,8 @@ function StatsRow({ azimuth, altitude, illumination, elongation }) {
     }}>
       {items.map(({ label, value }) => (
         <div key={label} style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '0.6rem', color: CREAM_DIM, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 5 }}>{label}</div>
-          <div style={{ fontSize: '0.88rem', color: GOLD, fontFamily: 'Georgia, serif' }}>{value}</div>
+          <div style={{ fontSize: '0.6rem', color: CREAM_DIM, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+          <div style={{ fontSize: '0.85rem', color: GOLD, fontFamily: 'Georgia, serif' }}>{value}</div>
         </div>
       ))}
     </div>
@@ -856,15 +927,16 @@ function StatsRow({ azimuth, altitude, illumination, elongation }) {
 
 // ─── Main SkyFinder ───────────────────────────────────────────────────────────
 
-export default function SkyFinder({ data, loading, error, moonData, lat, lon }) {
+export default function SkyFinder({ data, loading, error, moonData, sunData, lat, lon }) {
   const [permission, setPermission]           = useState(null)
   const [mode, setMode]                       = useState('compass')
+  const [calibrated, setCalibrated]           = useState(false)
   const [alpha, setAlpha]                     = useState(0)
   const [beta, setBeta]                       = useState(90)
   const [compassAccuracy, setCompassAccuracy] = useState(-1)
   const [cameraError, setCameraError]         = useState(false)
-  const [calibrating, setCalibrating]         = useState(false)
   const [compassOffsetState, setCompassOffsetState] = useState(0)
+  const [altOffsetState, setAltOffsetState]   = useState(0)
 
   const alphaRaw       = useRef(0)
   const betaRaw        = useRef(90)
@@ -872,8 +944,11 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
   const videoRef       = useRef(null)
   const streamRef      = useRef(null)
   const compassOffset  = useRef(0)
+  const altitudeOffset = useRef(0)
   const starAzAltsRef  = useRef([])
   const constAzAltsRef = useRef([])
+  const liveVenusRef   = useRef({ az: 0, alt: 0 })
+  const liveMoonRef    = useRef({ az: null, alt: null })
 
   // Permission check — auto-request if previously granted
   useEffect(() => {
@@ -912,9 +987,10 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
     return () => window.removeEventListener('deviceorientation', handler, true)
   }, [permission])
 
-  // Camera — only active in viewfinder mode
+  // Camera — active in viewfinder OR calibration mode
   useEffect(() => {
-    if (mode !== 'viewfinder' || permission !== 'granted') {
+    const needsCamera = permission === 'granted' && (mode === 'viewfinder' || !calibrated)
+    if (!needsCamera) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop())
         streamRef.current = null
@@ -938,19 +1014,27 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
         streamRef.current = null
       }
     }
-  }, [mode, permission])
+  }, [mode, permission, calibrated])
 
-  // Star + constellation az/alt — recompute every 5s (refs only, no React state)
+  // Star, constellation, Venus & Moon az/alt — recompute every 5s
   useEffect(() => {
     const update = () => {
       const l = lat ?? 0, o = lon ?? 0
       starAzAltsRef.current  = STARS.map(s => ({ ...s, ...raDecToAzAlt(s.ra, s.dec, l, o) }))
       constAzAltsRef.current = CONSTELLATIONS.map(c => ({ ...c, ...raDecToAzAlt(c.ra, c.dec, l, o) }))
+      if (data?.ra != null && data?.dec != null) {
+        liveVenusRef.current = raDecToAzAlt(data.ra, data.dec, l, o)
+      }
+      if (moonData?.ra != null && moonData?.dec != null) {
+        liveMoonRef.current = raDecToAzAlt(moonData.ra, moonData.dec, l, o)
+      } else {
+        liveMoonRef.current = { az: moonData?.azimuth ?? null, alt: moonData?.altitude ?? null }
+      }
     }
     update()
     const id = setInterval(update, 5000)
     return () => clearInterval(id)
-  }, [lat, lon])
+  }, [lat, lon, data, moonData])
 
   async function requestPermission() {
     try {
@@ -968,43 +1052,63 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
     }
   }
 
-  // Venus data
-  const venusAz    = data?.azimuth      ?? 0
-  const venusAlt   = data?.altitude     ?? 0
+  // Calibration handler — computes az + alt offsets from a known object
+  function handleCalibrate(target) {
+    if (target === 'skip') {
+      compassOffset.current = 0
+      altitudeOffset.current = 0
+      setCompassOffsetState(0)
+      setAltOffsetState(0)
+      setCalibrated(true)
+      return
+    }
+
+    const refData = target === 'moon' ? moonData : sunData
+    if (!refData) { setCalibrated(true); return }
+
+    // True az/alt from server (Astropy — accurate)
+    const trueAz  = refData.azimuth
+    const trueAlt = refData.altitude
+
+    // Device readings at this moment (user is pointing crosshairs at the object)
+    const deviceHeading   = alphaRaw.current
+    const deviceElevation = betaRaw.current - 90
+
+    // Compute offsets
+    let azOff = trueAz - deviceHeading
+    if (azOff > 180) azOff -= 360
+    if (azOff < -180) azOff += 360
+    const altOff = trueAlt - deviceElevation
+
+    compassOffset.current  = azOff
+    altitudeOffset.current = altOff
+    setCompassOffsetState(azOff)
+    setAltOffsetState(altOff)
+    setCalibrated(true)
+  }
+
+  // Venus data — use live-computed az/alt from RA/Dec
+  const venusAz    = liveVenusRef.current.az  ?? data?.azimuth  ?? 0
+  const venusAlt   = liveVenusRef.current.alt ?? data?.altitude ?? 0
   const venusIllum = data?.illumination ?? 0
   const venusElong = data?.elongation   ?? 0
   const zodiac     = data?.zodiac       ?? '–'
   const phase      = data?.phase        ?? '–'
   const isEvening  = data?.is_evening_star ?? false
 
-  // Moon data
-  const moonAz    = moonData?.azimuth      ?? null
-  const moonAlt   = moonData?.altitude     ?? null
+  // Moon data — use live-computed az/alt from RA/Dec
+  const moonAz    = liveMoonRef.current.az  ?? moonData?.azimuth  ?? null
+  const moonAlt   = liveMoonRef.current.alt ?? moonData?.altitude ?? null
   const moonIllum = moonData?.illumination ?? null
 
-  // Orientation math (state-rate ~6fps, used for hint text / locked badge)
+  // Orientation math
   const effectiveAlpha  = (alpha + compassOffsetState + 360) % 360
+  const deviceElevation = beta - 90 + altOffsetState
   const azDiff          = ((venusAz - effectiveAlpha + 540) % 360) - 180
-  const deviceElevation = beta - 90
   const altDiff         = venusAlt - deviceElevation
 
   const locked = permission === 'granted' && mode === 'viewfinder'
     && Math.abs(azDiff) < 4 && Math.abs(altDiff) < 4
-
-  function handleSetCalibration() {
-    if (moonAz == null) return
-    let newOffset = (moonAz - alphaRaw.current + 360) % 360
-    if (newOffset > 180) newOffset -= 360
-    compassOffset.current = newOffset
-    setCompassOffsetState(newOffset)
-    setCalibrating(false)
-  }
-
-  function handleResetOffset() {
-    compassOffset.current = 0
-    setCompassOffsetState(0)
-    setCalibrating(false)
-  }
 
   // Permission screens
   if (permission === null) {
@@ -1023,9 +1127,22 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
     )
   }
 
+  // Calibration screen — shown before compass/viewfinder
+  if (!calibrated) {
+    return (
+      <CalibrationScreen
+        videoRef={videoRef}
+        cameraError={cameraError}
+        moonData={moonData}
+        sunData={sunData}
+        onCalibrate={handleCalibrate}
+      />
+    )
+  }
+
   return (
     <>
-      {/* Main page — compass mode (always in DOM so RAF keeps running) */}
+      {/* Main page — compass mode */}
       <div style={{
         background: BG,
         minHeight: '100dvh',
@@ -1086,6 +1203,23 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
           />
         </div>
 
+        {/* Recalibrate button */}
+        <div style={{ padding: '12px 20px 0', display: 'flex', justifyContent: 'center' }}>
+          <button
+            onClick={() => setCalibrated(false)}
+            style={{
+              background: 'transparent',
+              border: `1px solid rgba(200,184,112,0.3)`,
+              borderRadius: 20, color: CREAM_DIM,
+              padding: '7px 18px', fontSize: '0.72rem',
+              fontFamily: 'Georgia, serif', letterSpacing: '0.04em',
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Recalibrate
+          </button>
+        </div>
+
         <StatsRow
           azimuth={venusAz}
           altitude={venusAlt}
@@ -1109,17 +1243,13 @@ export default function SkyFinder({ data, loading, error, moonData, lat, lon }) 
           starAzAltsRef={starAzAltsRef}
           constAzAltsRef={constAzAltsRef}
           compassOffset={compassOffset}
-          compassOffsetState={compassOffsetState}
-          onResetOffset={handleResetOffset}
-          calibrating={calibrating}
-          setCalibrating={setCalibrating}
-          onSetCalibration={handleSetCalibration}
           locked={locked}
           videoRef={videoRef}
           cameraError={cameraError}
           azDiff={azDiff}
           altDiff={altDiff}
           onBack={() => setMode('compass')}
+          onRecalibrate={() => setCalibrated(false)}
         />
       )}
     </>

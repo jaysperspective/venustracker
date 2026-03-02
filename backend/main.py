@@ -326,20 +326,32 @@ def get_sky(
     from venustracker.core.coordinates import radec_to_altaz
 
     moon = get_current_position("moon", lat, lon)
-    altaz = radec_to_altaz(moon.ra, moon.dec, lat, lon)
+    moon_altaz = radec_to_altaz(moon.ra, moon.dec, lat, lon)
     illum = moon.illumination
     if   illum < 6:  phase = "New Moon"
     elif illum < 45: phase = "Crescent"
     elif illum < 55: phase = "Quarter"
     elif illum < 94: phase = "Gibbous"
     else:            phase = "Full Moon"
+
+    sun = get_current_position("sun", lat, lon)
+    sun_altaz = radec_to_altaz(sun.ra, sun.dec, lat, lon)
+
     return {
         "moon": {
-            "altitude":     altaz.altitude,
-            "azimuth":      altaz.azimuth,
+            "ra":           moon.ra,
+            "dec":          moon.dec,
+            "altitude":     moon_altaz.altitude,
+            "azimuth":      moon_altaz.azimuth,
             "illumination": illum,
             "phase":        phase,
-        }
+        },
+        "sun": {
+            "ra":           sun.ra,
+            "dec":          sun.dec,
+            "altitude":     sun_altaz.altitude,
+            "azimuth":      sun_altaz.azimuth,
+        },
     }
 
 

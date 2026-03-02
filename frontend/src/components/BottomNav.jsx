@@ -1,17 +1,5 @@
 const TABS = [
   {
-    id: 'venus',
-    label: 'Venus',
-    icon: (active) => (
-      // Venus symbol ♀ — circle with cross below
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="9" r="5.5" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" />
-        <line x1="12" y1="14.5" x2="12" y2="21" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" strokeLinecap="round" />
-        <line x1="9" y1="18" x2="15" y2="18" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
     id: 'sky',
     label: 'Sky',
     icon: (active) => {
@@ -42,6 +30,18 @@ const TABS = [
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+      </svg>
+    ),
+  },
+  {
+    id: 'venus',
+    label: 'Venus',
+    icon: (active) => (
+      // Venus symbol ♀ — circle with cross below
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="9" r="5.5" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" />
+        <line x1="12" y1="14.5" x2="12" y2="21" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="9" y1="18" x2="15" y2="18" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     ),
   },

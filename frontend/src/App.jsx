@@ -36,11 +36,106 @@ function useData(fetchFn, deps) {
   return state
 }
 
+function AcceptanceGate({ onAccept }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: '#0D0D08',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }}>
+      <div style={{
+        maxWidth: 400, width: '100%',
+        textAlign: 'center',
+      }}>
+        <h1 style={{
+          fontSize: '1.6rem', fontFamily: 'Georgia, serif', fontWeight: 'normal',
+          color: 'var(--dark)', letterSpacing: '0.06em', marginBottom: 8,
+        }}>
+          Venus Tracker
+        </h1>
+        <p style={{
+          fontSize: '0.85rem', color: 'var(--dark-muted)',
+          fontStyle: 'italic', fontFamily: 'Georgia, serif',
+          marginBottom: 32,
+        }}>
+          Astronomy & astrology companion for Venus
+        </p>
+
+        <div style={{
+          background: 'var(--sand)', border: '1px solid var(--border)',
+          borderRadius: 10, padding: '16px 18px',
+          textAlign: 'left', marginBottom: 28,
+          maxHeight: 300, overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}>
+          <h2 style={{
+            fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--dark-muted)', marginBottom: 12, marginTop: 0,
+          }}>
+            Privacy Policy
+          </h2>
+          <p style={gateParaStyle}>
+            Your location is used on-device only to calculate Venus and Moon positions. It is never transmitted to third parties or stored on our servers.
+          </p>
+          <p style={gateParaStyle}>
+            The camera is used only for the Sky Finder viewfinder. No images are captured or stored. News is fetched anonymously from Google News RSS. No analytics, cookies, tracking, or advertising.
+          </p>
+          <p style={gateParaStyle}>
+            Third-party services: Nominatim (reverse geocoding) and JPL Horizons (astronomical data) — all requests are anonymous.
+          </p>
+
+          <h2 style={{
+            fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--dark-muted)', marginBottom: 12, marginTop: 20,
+          }}>
+            Terms of Service
+          </h2>
+          <p style={gateParaStyle}>
+            Venus Tracker is provided "as is" without warranty. All astronomical and astrological data is for informational and educational purposes only.
+          </p>
+          <p style={{ ...gateParaStyle, marginBottom: 0 }}>
+            We are not responsible for the accuracy of third-party data. By using this app you assume all risk. Terms may be updated; continued use constitutes acceptance.
+          </p>
+        </div>
+
+        <button
+          onClick={onAccept}
+          style={{
+            background: '#C5C9A8', color: '#1a1a14',
+            border: 'none', borderRadius: 24,
+            padding: '14px 36px',
+            fontSize: '0.88rem', fontWeight: 600,
+            letterSpacing: '0.04em',
+            cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          Accept & Continue
+        </button>
+
+        <p style={{
+          fontSize: '0.68rem', color: 'var(--dark-muted)',
+          marginTop: 14, lineHeight: 1.6,
+        }}>
+          By tapping "Accept & Continue" you agree to the Privacy Policy and Terms of Service.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const gateParaStyle = {
+  fontSize: '0.78rem', color: 'var(--dark)', lineHeight: 1.7,
+  marginTop: 0, marginBottom: 10,
+}
+
 export default function App() {
   const [tab, setTab] = useState('venus')
   const [lat, setLat] = useState(0)
   const [lon, setLon] = useState(0)
   const [criticalLoaded, setCriticalLoaded] = useState(false)
+  const [accepted, setAccepted] = useState(() => localStorage.getItem('tos_accepted') === '1')
 
   const year = new Date().getFullYear()
 
@@ -69,6 +164,13 @@ export default function App() {
   }
 
   const suspenseFallback = <p style={{ padding: 40, textAlign: 'center' }}>Loading…</p>
+
+  if (!accepted) {
+    return <AcceptanceGate onAccept={() => {
+      localStorage.setItem('tos_accepted', '1')
+      setAccepted(true)
+    }} />
+  }
 
   return (
     <>
@@ -105,6 +207,7 @@ export default function App() {
           <SkyFinder
             data={venus.data} loading={venus.loading} error={venus.error}
             moonData={sky.data?.moon}
+            sunData={sky.data?.sun}
             lat={lat} lon={lon}
           />
         </Suspense>
