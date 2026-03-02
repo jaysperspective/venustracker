@@ -167,9 +167,30 @@ function ElevationBar({ venusAlt, deviceElevation }) {
 
 // ─── Compass view ─────────────────────────────────────────────────────────────
 
-function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff, compassAccuracy }) {
+function CompassView({ alphaRaw, alpha, venusAz, venusAlt, deviceElevation, azDiff, compassAccuracy }) {
   const CX = 150, CY = 150
   const RING_R = 126
+
+  // Ref for the rotating SVG group — RAF drives it directly, no React re-render
+  const groupRef = useRef(null)
+  const smoothAngle = useRef(alpha)
+
+  useEffect(() => {
+    let raf
+    const animate = () => {
+      const target = alphaRaw.current
+      const curr   = smoothAngle.current
+      // Shortest-path interpolation across the 0/360 seam
+      const diff   = ((target - curr + 540) % 360) - 180
+      smoothAngle.current = curr + diff * 0.14
+      if (groupRef.current) {
+        groupRef.current.setAttribute('transform', `rotate(${-smoothAngle.current}, ${CX}, ${CY})`)
+      }
+      raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [alphaRaw]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Venus dot coordinates on the ring (azimuth in SVG: 0=right, so -90 offset)
   const venusRad = ((venusAz - 90) * Math.PI) / 180
@@ -185,7 +206,7 @@ function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff, compas
 
   const ticks = Array.from({ length: 12 }, (_, i) => i * 30)
 
-  // Hint text
+  // Hint text (alpha state updates at ~6fps — fine for text)
   const absAz = Math.abs(azDiff).toFixed(1)
   let hint
   if (Math.abs(azDiff) < 3) hint = 'Facing Venus'
@@ -206,8 +227,8 @@ function CompassView({ alpha, venusAz, venusAlt, deviceElevation, azDiff, compas
         viewBox="0 0 300 300"
         style={{ maxWidth: '100%', overflow: 'visible' }}
       >
-        {/* Whole compass rotates opposite to device heading */}
-        <g transform={`rotate(${-alpha}, ${CX}, ${CY})`}>
+        {/* Whole compass rotates opposite to device heading — driven by RAF, not React */}
+        <g ref={groupRef}>
           {/* Ring */}
           <circle cx={CX} cy={CY} r={RING_R} stroke={GOLD} strokeWidth="1" fill="none" opacity="0.2" />
           <circle cx={CX} cy={CY} r={RING_R - 20} stroke={GOLD} strokeWidth="0.5" fill="none" opacity="0.08" />
@@ -342,13 +363,34 @@ function CornerBrackets() {
 
 // ─── Viewfinder view ──────────────────────────────────────────────────────────
 
-function ViewfinderView({ azDiff, altDiff, locked, videoRef, cameraError }) {
-  // Map angle difference to percentage offset (clamped)
-  const azClamped  = Math.max(-90, Math.min(90, azDiff))
-  const altClamped = Math.max(-60, Math.min(60, altDiff))
-  const dotX = 50 + (azClamped / 90)  * 42   // 50% ± 42%
-  const dotY = 50 - (altClamped / 60) * 38   // 50% ∓ 38% (up = less Y)
+function ViewfinderView({ alphaRaw, betaRaw, venusAz, venusAlt, azDiff, altDiff, locked, videoRef, cameraError }) {
+  // Dot ref — RAF drives position directly
+  const dotRef      = useRef(null)
+  const smoothAzD   = useRef(azDiff)
+  const smoothAltD  = useRef(altDiff)
 
+  useEffect(() => {
+    let raf
+    const animate = () => {
+      const targetAzD  = ((venusAz - alphaRaw.current + 540) % 360) - 180
+      const targetAltD = venusAlt - (betaRaw.current - 90)
+      // Lerp with wrap-aware az diff
+      const azDelta = ((targetAzD - smoothAzD.current + 540) % 360) - 180
+      smoothAzD.current  += azDelta * 0.14
+      smoothAltD.current += (targetAltD - smoothAltD.current) * 0.14
+      if (dotRef.current) {
+        const azC  = Math.max(-90, Math.min(90,  smoothAzD.current))
+        const altC = Math.max(-60, Math.min(60, smoothAltD.current))
+        dotRef.current.style.left = `${50 + (azC  / 90)  * 42}%`
+        dotRef.current.style.top  = `${50 - (altC / 60) * 38}%`
+      }
+      raf = requestAnimationFrame(animate)
+    }
+    raf = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(raf)
+  }, [alphaRaw, betaRaw, venusAz, venusAlt]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hint text uses slower-updating azDiff/altDiff props (fine for text)
   const azAbs  = Math.abs(azDiff).toFixed(1)
   const altAbs = Math.abs(altDiff).toFixed(1)
 
@@ -420,15 +462,14 @@ function ViewfinderView({ azDiff, altDiff, locked, videoRef, cameraError }) {
         </div>
       </div>
 
-      {/* Venus dot */}
-      <div style={{
+      {/* Venus dot — position driven by RAF, not React state */}
+      <div ref={dotRef} style={{
         position: 'absolute',
-        left: `${dotX}%`,
-        top: `${dotY}%`,
+        left: '50%',
+        top: '50%',
         transform: 'translate(-50%, -50%)',
         pointerEvents: 'none',
         zIndex: 5,
-        transition: 'left 0.08s linear, top 0.08s linear',
       }}>
         {locked && (
           <>
@@ -552,15 +593,19 @@ function StatsRow({ azimuth, altitude, illumination, elongation }) {
 
 export default function SkyFinder({ data, loading, error }) {
   // null = checking, 'prompt' | 'granted' | 'denied' | 'unavailable'
-  const [permission, setPermission]       = useState(null)
-  const [mode, setMode]                   = useState('compass')
-  const [alpha, setAlpha]                 = useState(0)   // compass heading 0–360
-  const [beta, setBeta]                   = useState(90)  // tilt; 90 = vertical portrait
-  const [compassAccuracy, setCompassAccuracy] = useState(-1) // -1 = unknown
-  const [cameraError, setCameraError]     = useState(false)
-  const lastUpdate                        = useRef(0)
-  const videoRef                          = useRef(null)
-  const streamRef                         = useRef(null)
+  const [permission, setPermission]           = useState(null)
+  const [mode, setMode]                       = useState('compass')
+  // alpha/beta state is only for hint text + stats (updates ~6fps via lastTextUpdate gate)
+  const [alpha, setAlpha]                     = useState(0)
+  const [beta, setBeta]                       = useState(90)
+  const [compassAccuracy, setCompassAccuracy] = useState(-1)
+  const [cameraError, setCameraError]         = useState(false)
+  // Raw sensor refs — updated at full sensor rate, bypassing React renders
+  const alphaRaw                              = useRef(0)
+  const betaRaw                               = useRef(90)
+  const lastTextUpdate                        = useRef(0)
+  const videoRef                              = useRef(null)
+  const streamRef                             = useRef(null)
 
   // Detect permission requirement on mount
   useEffect(() => {
@@ -578,15 +623,20 @@ export default function SkyFinder({ data, loading, error }) {
     if (permission !== 'granted') return
 
     const handler = (e) => {
-      const now = Date.now()
-      if (now - lastUpdate.current < 50) return  // ~20 fps
-      lastUpdate.current = now
       // webkitCompassHeading is true-north referenced on iOS;
       // e.alpha is only an arbitrary-reference fallback for Android.
       const heading = e.webkitCompassHeading ?? e.alpha
-      if (heading != null) setAlpha(heading)
-      if (e.beta  != null) setBeta(e.beta)
+      // Always write to refs — no React render cost, feeds RAF loops at full rate
+      if (heading  != null) alphaRaw.current = heading
+      if (e.beta   != null) betaRaw.current  = e.beta
       if (e.webkitCompassAccuracy != null) setCompassAccuracy(e.webkitCompassAccuracy)
+      // Update React state only ~6fps for hint text and stats
+      const now = Date.now()
+      if (now - lastTextUpdate.current > 160) {
+        lastTextUpdate.current = now
+        if (heading != null) setAlpha(heading)
+        if (e.beta  != null) setBeta(e.beta)
+      }
     }
 
     window.addEventListener('deviceorientation', handler, true)
@@ -742,6 +792,7 @@ export default function SkyFinder({ data, loading, error }) {
       }}>
         {mode === 'compass' ? (
           <CompassView
+            alphaRaw={alphaRaw}
             alpha={alpha}
             venusAz={venusAz}
             venusAlt={venusAlt}
@@ -751,6 +802,10 @@ export default function SkyFinder({ data, loading, error }) {
           />
         ) : (
           <ViewfinderView
+            alphaRaw={alphaRaw}
+            betaRaw={betaRaw}
+            venusAz={venusAz}
+            venusAlt={venusAlt}
             azDiff={azDiff}
             altDiff={altDiff}
             locked={locked}
