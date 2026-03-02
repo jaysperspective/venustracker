@@ -84,7 +84,7 @@ export default function BottomNav({ active, onChange }) {
       left: '50%',
       transform: 'translateX(-50%)',
       width: '100%',
-      maxWidth: 430,
+      maxWidth: '100%',
       height: 'calc(62px + env(safe-area-inset-bottom))',
       paddingBottom: 'env(safe-area-inset-bottom)',
       background: '#3D3D2E',
