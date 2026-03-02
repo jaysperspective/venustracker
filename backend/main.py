@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 import re
-import sys
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 from datetime import date
-from pathlib import Path
-from typing import Any
-
-# Ensure the src package is importable when running from the backend/ directory
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+from typing import Any, Literal
 
 import os
 from dotenv import load_dotenv
@@ -32,7 +27,13 @@ _origins = [o.strip() for o in os.getenv(
 
 app = FastAPI(title="VenusTracker API", version="1.0.0")
 
-limiter = Limiter(key_func=get_remote_address)
+
+def _real_ip(request: Request) -> str:
+    xff = request.headers.get("X-Forwarded-For")
+    return xff.split(",")[0].strip() if xff else get_remote_address(request)
+
+
+limiter = Limiter(key_func=_real_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -44,6 +45,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=()"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self' capacitor://localhost; "
+            "connect-src 'self' https://venustracker-production.up.railway.app "
+            "https://nominatim.openstreetmap.org https://news.google.com; "
+            "img-src 'self' data:; "
+            "style-src 'self' 'unsafe-inline'"
+        )
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
@@ -52,7 +60,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
     allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_headers=["Accept", "Content-Type"],
 )
 
 
@@ -136,8 +144,8 @@ def _serialize_calendar_year(cy: Any) -> dict:
 @limiter.limit("30/minute")
 def get_venus(
     request: Request,
-    lat: float = Query(default=0.0),
-    lon: float = Query(default=0.0),
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> dict:
     """Return current Venus status including zodiac sign."""
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)
@@ -166,8 +174,8 @@ def get_venus(
 def get_ephemeris(
     request: Request,
     days: int = Query(default=30, ge=1, le=365),
-    lat: float = Query(default=0.0),
-    lon: float = Query(default=0.0),
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> list[dict]:
     """Return daily Venus elongation values for the sparkline chart."""
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)
@@ -206,8 +214,8 @@ def _parse_event_date(raw: str) -> str:
 def get_events(
     request: Request,
     days: int = Query(default=365, ge=1, le=730),
-    lat: float = Query(default=0.0),
-    lon: float = Query(default=0.0),
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> list[dict]:
     """Return upcoming Venus events with ISO-formatted dates."""
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)
@@ -221,8 +229,8 @@ def get_events(
 @limiter.limit("30/minute")
 def get_calendar_today(
     request: Request,
-    lat: float = Query(default=0.0),
-    lon: float = Query(default=0.0),
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> dict:
     """Return today's Venus calendar date."""
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)
@@ -235,7 +243,7 @@ def get_calendar_today(
 
 @app.get("/api/news")
 @limiter.limit("20/minute")
-def get_news(request: Request, category: str = Query(default="all")) -> list[dict]:
+def get_news(request: Request, category: Literal["all", "astronomy", "astrology"] = Query(default="all")) -> list[dict]:
     """Return Venus news articles from Google News RSS feeds."""
     from venustracker.cache import get_cache
 
@@ -306,13 +314,42 @@ def _fetch_rss(url: str, category: str) -> list[dict]:
     return results
 
 
+@app.get("/api/sky")
+@limiter.limit("30/minute")
+def get_sky(
+    request: Request,
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
+) -> dict:
+    """Return current Moon position and phase."""
+    from venustracker.core.ephemeris import get_current_position
+    from venustracker.core.coordinates import radec_to_altaz
+
+    moon = get_current_position("moon", lat, lon)
+    altaz = radec_to_altaz(moon.ra, moon.dec, lat, lon)
+    illum = moon.illumination
+    if   illum < 6:  phase = "New Moon"
+    elif illum < 45: phase = "Crescent"
+    elif illum < 55: phase = "Quarter"
+    elif illum < 94: phase = "Gibbous"
+    else:            phase = "Full Moon"
+    return {
+        "moon": {
+            "altitude":     altaz.altitude,
+            "azimuth":      altaz.azimuth,
+            "illumination": illum,
+            "phase":        phase,
+        }
+    }
+
+
 @app.get("/api/calendar/year")
 @limiter.limit("10/minute")
 def get_calendar_year(
     request: Request,
     year: int = Query(default=2026),
-    lat: float = Query(default=0.0),
-    lon: float = Query(default=0.0),
+    lat: float = Query(default=0.0, ge=-90.0, le=90.0),
+    lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> dict:
     """Return the full Venus calendar year overlapping the given Gregorian year."""
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)

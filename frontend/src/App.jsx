@@ -9,11 +9,13 @@ import BottomNav from './components/BottomNav.jsx'
 const InfoPage   = lazy(() => import('./pages/InfoPage.jsx'))
 const NewsPage   = lazy(() => import('./pages/NewsPage.jsx'))
 const SkyFinder  = lazy(() => import('./pages/SkyFinder.jsx'))
+const AboutPage  = lazy(() => import('./pages/AboutPage.jsx'))
 import {
   fetchVenus,
   fetchEvents,
   fetchCalendarToday,
   fetchCalendarYear,
+  fetchSky,
 } from './api.js'
 
 function useData(fetchFn, deps) {
@@ -44,6 +46,7 @@ export default function App() {
 
   const venus    = useData(() => fetchVenus(lat, lon),         [lat, lon])
   const calToday = useData(() => fetchCalendarToday(lat, lon), [lat, lon])
+  const sky      = useData(() => fetchSky(lat, lon),           [lat, lon])
 
   useEffect(() => {
     if (!venus.loading && !calToday.loading) {
@@ -99,7 +102,11 @@ export default function App() {
 
       {tab === 'sky' && (
         <Suspense fallback={suspenseFallback}>
-          <SkyFinder data={venus.data} loading={venus.loading} error={venus.error} />
+          <SkyFinder
+            data={venus.data} loading={venus.loading} error={venus.error}
+            moonData={sky.data?.moon}
+            lat={lat} lon={lon}
+          />
         </Suspense>
       )}
 
@@ -112,6 +119,12 @@ export default function App() {
       {tab === 'news' && (
         <Suspense fallback={suspenseFallback}>
           <NewsPage />
+        </Suspense>
+      )}
+
+      {tab === 'about' && (
+        <Suspense fallback={suspenseFallback}>
+          <AboutPage />
         </Suspense>
       )}
 

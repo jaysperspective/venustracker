@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 async function geocode(query) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
-  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
+  const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'VenusTracker/1.0' } })
   if (!res.ok) throw new Error('Geocoding request failed')
   const data = await res.json()
   if (!data.length) throw new Error('Location not found')

@@ -3,5 +3,9 @@
   "appName": "Venus Tracker",
   "webDir": "dist",
   "server": { "androidScheme": "https" },
-  "ios": { "contentInset": "never" }
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0D0D08",
+    "limitsNavigationsToAppBoundDomains": true
+  }
 }

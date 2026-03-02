@@ -35,8 +35,14 @@ export async function fetchCalendarYear(lat, lon, year) {
   return res.json()
 }
 
+export async function fetchSky(lat, lon) {
+  const res = await fetch(`${BASE}/api/sky?${qs(lat, lon)}`)
+  if (!res.ok) throw new Error(`Sky fetch failed: ${res.status}`)
+  return res.json()
+}
+
 export async function fetchNews(category = 'all') {
-  const res = await fetch(`${BASE}/api/news?category=${category}`)
+  const res = await fetch(`${BASE}/api/news?${new URLSearchParams({ category })}`)
   if (!res.ok) throw new Error(`News fetch failed: ${res.status}`)
   return res.json()
 }

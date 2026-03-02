@@ -67,6 +67,10 @@ function CategoryBadge({ category }) {
   )
 }
 
+function safeHref(url) {
+  return /^https?:\/\//i.test(url) ? url : '#'
+}
+
 function ArticleCard({ article }) {
   return (
     <div style={{
@@ -79,7 +83,7 @@ function ArticleCard({ article }) {
       border: '0.5px solid rgba(255,255,255,0.07)',
     }}>
       <a
-        href={article.url}
+        href={safeHref(article.url)}
         target="_blank"
         rel="noopener noreferrer"
         style={{
@@ -249,7 +253,7 @@ export default function NewsPage() {
                 No articles found.
               </div>
             )
-            : articles.map((article, i) => <ArticleCard key={i} article={article} />)
+            : articles.map((article) => <ArticleCard key={`${article.url}-${article.published}`} article={article} />)
         }
       </div>
     </main>

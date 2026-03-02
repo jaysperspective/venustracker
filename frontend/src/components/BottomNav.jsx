@@ -59,6 +59,21 @@ const TABS = [
       </svg>
     ),
   },
+  {
+    id: 'about',
+    label: 'About',
+    icon: (active) => {
+      const c = active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'
+      return (
+        // Info circle icon
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={c} strokeWidth="1.6" />
+          <line x1="12" y1="11" x2="12" y2="17" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="12" cy="8" r="1.1" fill={c} />
+        </svg>
+      )
+    },
+  },
 ]
 
 export default function BottomNav({ active, onChange }) {
