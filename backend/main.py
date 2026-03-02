@@ -77,6 +77,31 @@ def health():
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _venus_rise_set(lat: float, lon: float) -> dict:
+    """Scan Venus altitude over 24h at 5-min intervals to find rise/set times."""
+    from astropy.coordinates import EarthLocation, AltAz, get_body
+    from astropy.time import Time
+    import astropy.units as u
+    import numpy as np
+
+    loc = EarthLocation(lat=lat * u.deg, lon=lon * u.deg, height=0 * u.m)
+    now = Time.now()
+    # 288 steps = every 5 min over 24h
+    times = now + np.linspace(0, 24, 289) * u.hour
+    frame = AltAz(obstime=times, location=loc)
+    alts = get_body("venus", times).transform_to(frame).alt.deg
+
+    rise_time = None
+    set_time = None
+    for i in range(1, len(alts)):
+        if alts[i - 1] <= 0 < alts[i] and rise_time is None:
+            rise_time = times[i].to_datetime().strftime("%H:%M")
+        if alts[i - 1] > 0 >= alts[i] and set_time is None:
+            set_time = times[i].to_datetime().strftime("%H:%M")
+
+    return {"rise_time": rise_time, "set_time": set_time}
+
+
 def _zodiac_sign(ra: float, dec: float) -> str:
     """Convert Venus RA/Dec to ecliptic longitude and return zodiac sign."""
     from astropy.coordinates import SkyCoord, GeocentricMeanEcliptic
@@ -154,6 +179,11 @@ def get_venus(
 
     zodiac = _zodiac_sign(pos.ra, pos.dec)
 
+    try:
+        rise_set = _venus_rise_set(lat, lon)
+    except Exception:
+        rise_set = {"rise_time": None, "set_time": None}
+
     return {
         "ra": pos.ra,
         "dec": pos.dec,
@@ -166,6 +196,8 @@ def get_venus(
         "magnitude": status.magnitude,
         "distance_au": pos.delta,
         "zodiac": zodiac,
+        "rise_time": rise_set["rise_time"],
+        "set_time": rise_set["set_time"],
     }
 
 

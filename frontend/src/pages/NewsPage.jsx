@@ -127,7 +127,59 @@ function ArticleCard({ article }) {
   )
 }
 
-export default function NewsPage() {
+function VenusTonightCard({ venusData }) {
+  if (!venusData) return null
+  const { is_evening_star, zodiac, altitude, elongation, magnitude, phase } = venusData
+  const visible = altitude > 0
+  const starType = is_evening_star ? 'Evening Star' : 'Morning Star'
+  const summary = visible
+    ? `Venus is visible tonight as the ${starType} in ${zodiac}`
+    : `Venus is below the horizon — currently the ${starType} in ${zodiac}`
+
+  return (
+    <div style={{
+      background: 'rgba(200,184,112,0.1)',
+      border: '1px solid rgba(200,184,112,0.25)',
+      borderRadius: 12,
+      padding: '14px 16px',
+      marginBottom: 14,
+    }}>
+      <div style={{
+        fontSize: '0.62rem',
+        fontWeight: 600,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: '#c8b870',
+        marginBottom: 6,
+      }}>
+        Venus Tonight
+      </div>
+      <div style={{
+        fontSize: '0.88rem',
+        fontWeight: 600,
+        color: CREAM,
+        lineHeight: 1.4,
+        marginBottom: 8,
+      }}>
+        {summary}
+      </div>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '6px 16px',
+        fontSize: '0.72rem',
+        color: MUTED,
+      }}>
+        <span>{phase}</span>
+        <span>Alt {altitude.toFixed(1)}°</span>
+        <span>Elong {elongation.toFixed(1)}°</span>
+        <span>Mag {magnitude.toFixed(1)}</span>
+      </div>
+    </div>
+  )
+}
+
+export default function NewsPage({ venusData }) {
   const [category, setCategory] = useState('all')
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
@@ -228,6 +280,8 @@ export default function NewsPage() {
           )
         })}
       </div>
+
+      <VenusTonightCard venusData={venusData} />
 
       {/* Content */}
       {error && (

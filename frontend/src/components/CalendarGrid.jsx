@@ -25,6 +25,13 @@ function phaseColor(phase) {
   return PHASE_COLORS[phase] || '#E8DEBB'
 }
 
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 const TODAY = new Date().toISOString().slice(0, 10)
 
 function isCurrent(month) {
@@ -141,6 +148,7 @@ function MonthCard({ month, holidays, isCurrent, onClick }) {
 
 function MonthDetailSheet({ month, holidays, onClose }) {
   const bg = phaseColor(month.phase)
+  const bgTint = hexToRgba(bg, 0.18)
   const start = new Date(month.start_date + 'T00:00:00')
 
   const todayDayNum = (() => {
@@ -217,7 +225,7 @@ function MonthDetailSheet({ month, holidays, onClose }) {
             const isToday = number === todayDayNum
             return (
               <div key={number} style={{
-                background: isToday ? '#3D3D2E' : holiday ? bg : 'rgba(61,61,46,0.07)',
+                background: isToday ? '#3D3D2E' : holiday ? bg : bgTint,
                 border: holiday && !isToday ? '1px solid rgba(61,61,46,0.2)' : '1px solid transparent',
                 borderRadius: 6,
                 padding: '5px 2px 4px',

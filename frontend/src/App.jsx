@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import ObserverInput from './components/ObserverInput.jsx'
 import VenusHero from './components/VenusHero.jsx'
 import CalendarToday from './components/CalendarToday.jsx'
@@ -18,20 +18,32 @@ import {
   fetchSky,
 } from './api.js'
 
-function useData(fetchFn, deps) {
+function useData(fetchFn, deps, { intervalMs } = {}) {
   const [state, setState] = useState({ data: null, loading: true, error: null })
+  const intervalRef = useRef(null)
 
-  const load = useCallback(async () => {
-    setState(s => ({ ...s, loading: true, error: null }))
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setState(s => ({ ...s, loading: true, error: null }))
     try {
       const data = await fetchFn()
       setState({ data, loading: false, error: null })
     } catch (err) {
-      setState({ data: null, loading: false, error: err.message })
+      setState(s => silent && s.data
+        ? { ...s, loading: false }
+        : { data: null, loading: false, error: err.message })
     }
   }, deps) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!intervalMs) return
+    const tick = () => {
+      if (document.visibilityState === 'visible') load(true)
+    }
+    intervalRef.current = setInterval(tick, intervalMs)
+    return () => clearInterval(intervalRef.current)
+  }, [load, intervalMs])
 
   return state
 }
@@ -139,9 +151,9 @@ export default function App() {
 
   const year = new Date().getFullYear()
 
-  const venus    = useData(() => fetchVenus(lat, lon),         [lat, lon])
+  const venus    = useData(() => fetchVenus(lat, lon),         [lat, lon], { intervalMs: 30000 })
   const calToday = useData(() => fetchCalendarToday(lat, lon), [lat, lon])
-  const sky      = useData(() => fetchSky(lat, lon),           [lat, lon])
+  const sky      = useData(() => fetchSky(lat, lon),           [lat, lon], { intervalMs: 30000 })
 
   useEffect(() => {
     if (!venus.loading && !calToday.loading) {
@@ -221,7 +233,7 @@ export default function App() {
 
       {tab === 'news' && (
         <Suspense fallback={suspenseFallback}>
-          <NewsPage />
+          <NewsPage venusData={venus.data} />
         </Suspense>
       )}
 

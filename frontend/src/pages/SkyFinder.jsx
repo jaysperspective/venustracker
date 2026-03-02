@@ -92,16 +92,63 @@ const STARS = [
   { name: 'Merak',       ra: 165.460, dec:  56.383, mag:  2.37 },
 ]
 
+// ─── Constellation lines (star name pairs) ──────────────────────────────────
+
+const CONSTELLATION_LINES = [
+  // Orion
+  ['Betelgeuse', 'Bellatrix'],
+  ['Betelgeuse', 'Alnilam'],
+  ['Bellatrix', 'Alnilam'],
+  ['Alnilam', 'Alnitak'],
+  ['Alnilam', 'Mintaka'],
+  ['Alnitak', 'Saiph'],
+  ['Mintaka', 'Rigel'],
+  ['Betelgeuse', 'Saiph'],
+  ['Bellatrix', 'Rigel'],
+  // Gemini
+  ['Castor', 'Pollux'],
+  ['Castor', 'Alhena'],
+  ['Pollux', 'Alhena'],
+  // Taurus
+  ['Aldebaran', 'Elnath'],
+  // Ursa Major (Big Dipper)
+  ['Dubhe', 'Merak'],
+  ['Dubhe', 'Alioth'],
+  ['Alioth', 'Alkaid'],
+  ['Merak', 'Alioth'],
+  // Leo
+  ['Regulus', 'Deneb'],
+  // Scorpius
+  ['Antares', 'Shaula'],
+  ['Antares', 'Sargas'],
+  // Canis Major
+  ['Sirius', 'Adhara'],
+  ['Sirius', 'Mirzam'],
+  ['Sirius', 'Wezen'],
+  ['Adhara', 'Wezen'],
+]
+
+// Build a lookup for fast star-name → index mapping
+const STAR_INDEX = {}
+STARS.forEach((s, i) => { STAR_INDEX[s.name] = i })
+
+// ─── Haptics helper ─────────────────────────────────────────────────────────
+
+async function triggerHaptic() {
+  try {
+    const { Haptics, ImpactStyle } = await import('@capacitor/haptics')
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {})
+  } catch { /* not installed or browser */ }
+}
+
 // ─── Client-side RA/Dec → Az/Alt ─────────────────────────────────────────────
 
 function raDecToAzAlt(ra, dec, lat, lon) {
   const now = new Date()
   const JD = now.getTime() / 86400000 + 2440587.5
-  // Split into 0h UT Julian Date and UT hours — the GMST polynomial
-  // is only valid for T₀ at 0h UT; current UT must be added separately.
   const JD0 = Math.floor(JD - 0.5) + 0.5
   const T0 = (JD0 - 2451545.0) / 36525
-  const UT = (JD - JD0) * 24                // current UT in hours
+  const UT = (JD - JD0) * 24
   const GMST_h = 6.697374558 + 2400.0513369 * T0 + 0.0000258622 * T0 * T0 + UT * 1.00273790935
   const LST = ((GMST_h * 15 + lon) % 360 + 360) % 360
   const HA = ((LST - ra) % 360 + 360) % 360
@@ -196,8 +243,8 @@ function PermissionScreen({ onRequest, state }) {
 // ─── Calibration screen ──────────────────────────────────────────────────────
 
 function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibrate }) {
-  const moonAbove = moonData?.altitude != null && moonData.altitude > 0
-  const sunAbove  = sunData?.altitude  != null && sunData.altitude  > 0
+  const moonAbove = moonData?.altitude != null ? moonData.altitude > 0 : null
+  const sunAbove  = sunData?.altitude  != null ? sunData.altitude  > 0 : null
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#080806' }}>
@@ -248,11 +295,11 @@ function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibra
         <p style={{
           color: CREAM_DIM, fontSize: '0.82rem', lineHeight: 1.6, maxWidth: 300, margin: '0 auto',
         }}>
-          Point the crosshairs at the {moonAbove && sunAbove ? 'Moon or Sun' : moonAbove ? 'Moon' : sunAbove ? 'Sun' : 'Moon or Sun'}, then tap the matching button below.
+          Point the crosshairs at the Moon or Sun, then tap the matching button below.
         </p>
       </div>
 
-      {/* Buttons */}
+      {/* Buttons — always show both */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 20,
         paddingBottom: 'max(30px, env(safe-area-inset-bottom))',
@@ -261,7 +308,7 @@ function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibra
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
       }}>
         <div style={{ display: 'flex', gap: 14, justifyContent: 'center' }}>
-          {moonAbove && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <button
               onClick={() => onCalibrate('moon')}
               style={{
@@ -276,8 +323,13 @@ function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibra
             >
               Moon
             </button>
-          )}
-          {sunAbove && (
+            {moonAbove != null && (
+              <span style={{ fontSize: '0.62rem', color: moonAbove ? 'rgba(120,200,120,0.8)' : CREAM_DIM }}>
+                {moonAbove ? 'Above horizon' : 'Below horizon'}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <button
               onClick={() => onCalibrate('sun')}
               style={{
@@ -292,14 +344,13 @@ function CalibrationScreen({ videoRef, cameraError, moonData, sunData, onCalibra
             >
               Sun
             </button>
-          )}
+            {sunAbove != null && (
+              <span style={{ fontSize: '0.62rem', color: sunAbove ? 'rgba(120,200,120,0.8)' : CREAM_DIM }}>
+                {sunAbove ? 'Above horizon' : 'Below horizon'}
+              </span>
+            )}
+          </div>
         </div>
-
-        {!moonAbove && !sunAbove && (
-          <p style={{ color: CREAM_DIM, fontSize: '0.78rem', fontFamily: 'Georgia, serif', textAlign: 'center', maxWidth: 280 }}>
-            Neither the Moon nor the Sun is above the horizon right now. Tap below to use compass heading instead.
-          </p>
-        )}
 
         <button
           onClick={() => onCalibrate('skip')}
@@ -598,7 +649,7 @@ function FullscreenViewfinder({
       smoothDevElRef.current += (rawDevEl - smoothDevElRef.current) * 0.12
       const devEl = smoothDevElRef.current
 
-      // --- Canvas: horizon + stars ---
+      // --- Canvas: horizon + constellation lines + stars ---
       const canvas = skyCanvasRef.current
       const { W, H, dpr } = canvasSizeRef.current
       if (canvas && W > 0 && H > 0) {
@@ -621,29 +672,55 @@ function FullscreenViewfinder({
           ctx.strokeStyle = 'rgba(70,190,90,0.6)'; ctx.lineWidth = 1; ctx.stroke()
         }
 
+        // Helper to project az/alt to canvas x/y
+        const stars = starAzAltsRef.current ?? []
+        const project = (az, alt) => {
+          const azD  = ((az - eff + 540) % 360) - 180
+          const altD = alt - devEl
+          if (Math.abs(azD) > H_FOV_HALF * 1.2 || Math.abs(altD) > V_FOV_HALF * 1.2) return null
+          return {
+            x: W * 0.5 + (azD  / H_FOV_HALF) * W * 0.5,
+            y: H * 0.5 - (altD / V_FOV_HALF) * H * 0.5,
+          }
+        }
+
+        // Constellation lines
+        ctx.strokeStyle = 'rgba(200,184,112,0.15)'
+        ctx.lineWidth = 1
+        for (const [nameA, nameB] of CONSTELLATION_LINES) {
+          const iA = STAR_INDEX[nameA], iB = STAR_INDEX[nameB]
+          if (iA == null || iB == null) continue
+          const sA = stars[iA], sB = stars[iB]
+          if (!sA || !sB) continue
+          const pA = project(sA.az, sA.alt)
+          const pB = project(sB.az, sB.alt)
+          if (!pA || !pB) continue
+          ctx.beginPath()
+          ctx.moveTo(pA.x, pA.y)
+          ctx.lineTo(pB.x, pB.y)
+          ctx.stroke()
+        }
+
         // Stars
         ctx.fillStyle = '#dcd7c8'
         ctx.textBaseline = 'middle'
         ctx.font = '9px -apple-system, sans-serif'
-        for (const star of (starAzAltsRef.current ?? [])) {
-          const azD  = ((star.az - eff + 540) % 360) - 180
-          const altD = star.alt - devEl
-          if (Math.abs(azD) > H_FOV_HALF * 1.1 || Math.abs(altD) > V_FOV_HALF * 1.1) continue
-          const x = W * 0.5 + (azD  / H_FOV_HALF) * W * 0.5
-          const y = H * 0.5 - (altD / V_FOV_HALF) * H * 0.5
+        for (const star of stars) {
+          const p = project(star.az, star.alt)
+          if (!p) continue
           const r  = Math.max(1.2, 4.5 - star.mag * 1.0)
           const op = Math.max(0.3, Math.min(0.92, 1.05 - star.mag * 0.22))
           if (star.mag < 1.5) {
             ctx.globalAlpha = op * 0.12
-            ctx.beginPath(); ctx.arc(x, y, r * 2.8, 0, Math.PI * 2); ctx.fill()
+            ctx.beginPath(); ctx.arc(p.x, p.y, r * 2.8, 0, Math.PI * 2); ctx.fill()
             ctx.globalAlpha = op * 0.25
-            ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, Math.PI * 2); ctx.fill()
+            ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.6, 0, Math.PI * 2); ctx.fill()
           }
           ctx.globalAlpha = op
-          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill()
           if (star.name && star.mag < 1.5) {
             ctx.globalAlpha = 0.52
-            ctx.fillText(star.name, x + r + 4, y)
+            ctx.fillText(star.name, p.x + r + 4, p.y)
           }
         }
 
@@ -652,13 +729,10 @@ function FullscreenViewfinder({
         ctx.fillStyle = '#c8b870'
         for (const c of (constAzAltsRef.current ?? [])) {
           if (c.alt < -10) continue
-          const azD  = ((c.az - eff + 540) % 360) - 180
-          const altD = c.alt - devEl
-          if (Math.abs(azD) > H_FOV_HALF * 1.05 || Math.abs(altD) > V_FOV_HALF * 1.05) continue
-          const x = W * 0.5 + (azD / H_FOV_HALF) * W * 0.5
-          const y = H * 0.5 - (altD / V_FOV_HALF) * H * 0.5
+          const p = project(c.az, c.alt)
+          if (!p) continue
           ctx.globalAlpha = 0.28
-          ctx.fillText(c.name, x, y)
+          ctx.fillText(c.name, p.x, p.y)
         }
 
         ctx.globalAlpha = 1
@@ -949,6 +1023,21 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
   const constAzAltsRef = useRef([])
   const liveVenusRef   = useRef({ az: 0, alt: 0 })
   const liveMoonRef    = useRef({ az: null, alt: null })
+  const prevLockedRef  = useRef(false)
+
+  // Restore persisted calibration on mount (if < 1 hour old)
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('sky_calibration'))
+      if (saved && Date.now() - saved.timestamp < 3600000) {
+        compassOffset.current  = saved.compassOffset
+        altitudeOffset.current = saved.altitudeOffset
+        setCompassOffsetState(saved.compassOffset)
+        setAltOffsetState(saved.altitudeOffset)
+        setCalibrated(true)
+      }
+    } catch { /* no saved calibration */ }
+  }, [])
 
   // Permission check — auto-request if previously granted
   useEffect(() => {
@@ -1060,21 +1149,20 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
       setCompassOffsetState(0)
       setAltOffsetState(0)
       setCalibrated(true)
+      localStorage.setItem('sky_calibration', JSON.stringify({
+        compassOffset: 0, altitudeOffset: 0, timestamp: Date.now(),
+      }))
       return
     }
 
     const refData = target === 'moon' ? moonData : sunData
     if (!refData) { setCalibrated(true); return }
 
-    // True az/alt from server (Astropy — accurate)
     const trueAz  = refData.azimuth
     const trueAlt = refData.altitude
-
-    // Device readings at this moment (user is pointing crosshairs at the object)
     const deviceHeading   = alphaRaw.current
     const deviceElevation = betaRaw.current - 90
 
-    // Compute offsets
     let azOff = trueAz - deviceHeading
     if (azOff > 180) azOff -= 360
     if (azOff < -180) azOff += 360
@@ -1085,6 +1173,10 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
     setCompassOffsetState(azOff)
     setAltOffsetState(altOff)
     setCalibrated(true)
+
+    localStorage.setItem('sky_calibration', JSON.stringify({
+      compassOffset: azOff, altitudeOffset: altOff, timestamp: Date.now(),
+    }))
   }
 
   // Venus data — use live-computed az/alt from RA/Dec
@@ -1095,6 +1187,8 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
   const zodiac     = data?.zodiac       ?? '–'
   const phase      = data?.phase        ?? '–'
   const isEvening  = data?.is_evening_star ?? false
+  const riseTime   = data?.rise_time    ?? null
+  const setTime    = data?.set_time     ?? null
 
   // Moon data — use live-computed az/alt from RA/Dec
   const moonAz    = liveMoonRef.current.az  ?? moonData?.azimuth  ?? null
@@ -1109,6 +1203,12 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
 
   const locked = permission === 'granted' && mode === 'viewfinder'
     && Math.abs(azDiff) < 4 && Math.abs(altDiff) < 4
+
+  // Haptic on lock transition
+  useEffect(() => {
+    if (locked && !prevLockedRef.current) triggerHaptic()
+    prevLockedRef.current = locked
+  }, [locked])
 
   // Permission screens
   if (permission === null) {
@@ -1140,6 +1240,13 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
     )
   }
 
+  // Rise/set display string
+  const riseSetStr = riseTime && setTime
+    ? `Rises ${riseTime} · Sets ${setTime}`
+    : riseTime ? `Rises ${riseTime}`
+    : setTime  ? `Sets ${setTime}`
+    : null
+
   return (
     <>
       {/* Main page — compass mode */}
@@ -1164,6 +1271,11 @@ export default function SkyFinder({ data, loading, error, moonData, sunData, lat
               ? `Below horizon · ${venusAlt.toFixed(1)}°`
               : `Altitude ${venusAlt.toFixed(1)}° · ${phase}`}
           </div>
+          {riseSetStr && (
+            <div style={{ fontSize: '0.7rem', color: CREAM_DIM, marginTop: 3, opacity: 0.7 }}>
+              {riseSetStr}
+            </div>
+          )}
         </div>
 
         {/* Mode toggle */}
