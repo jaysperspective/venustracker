@@ -25,46 +25,42 @@ function retrogradeStatus(calYear) {
   return null
 }
 
-function phaseProgress(data, calYear) {
-  if (!data || !calYear?.months) return null
+function holidayProgress(data, calYear) {
+  if (!data || !calYear?.holidays) return null
 
-  const currentPhase = data.phase
-  const months = calYear.months
   const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  // Find all consecutive months with the current phase
-  const phaseMonths = []
-  let inPhase = false
-  for (const m of months) {
-    if (m.phase === currentPhase) {
-      inPhase = true
-      phaseMonths.push(m)
-    } else if (inPhase) {
-      break // stop after the phase ends
-    }
-  }
+  // Sort holidays chronologically and find the next upcoming one
+  const sorted = calYear.holidays
+    .filter(h => h.gregorian_date)
+    .map(h => ({ ...h, date: new Date(h.gregorian_date + 'T00:00:00') }))
+    .sort((a, b) => a.date - b.date)
 
-  if (!phaseMonths.length) return null
+  const nextHoliday = sorted.find(h => h.date > today)
+  if (!nextHoliday) return null
 
-  const phaseStart = new Date(phaseMonths[0].start_date + 'T00:00:00')
-  const lastMonth = phaseMonths[phaseMonths.length - 1]
-  const phaseEnd = new Date(lastMonth.end_date + 'T00:00:00')
+  // Find the previous holiday (or year start) as the anchor
+  const pastHolidays = sorted.filter(h => h.date <= today)
+  const prevDate = pastHolidays.length
+    ? pastHolidays[pastHolidays.length - 1].date
+    : calYear.new_year_date
+      ? new Date(calYear.new_year_date + 'T00:00:00')
+      : null
 
-  const totalDays = (phaseEnd - phaseStart) / 86_400_000
-  const elapsed = (today - phaseStart) / 86_400_000
-  const pct = Math.max(0, Math.min(100, (elapsed / totalDays) * 100))
-  const daysLeft = Math.max(0, Math.round(totalDays - elapsed))
+  if (!prevDate) return null
 
-  // Find next phase
-  const currentIdx = PHASE_ORDER.indexOf(currentPhase)
-  const nextPhase = currentIdx >= 0 ? PHASE_ORDER[(currentIdx + 1) % PHASE_ORDER.length] : null
+  const totalDays = (nextHoliday.date - prevDate) / 86_400_000
+  const elapsed = (today - prevDate) / 86_400_000
+  const pct = totalDays > 0 ? Math.max(0, Math.min(100, (elapsed / totalDays) * 100)) : 0
+  const daysLeft = Math.max(0, Math.round((nextHoliday.date - today) / 86_400_000))
 
-  return { pct, daysLeft, nextPhase, currentPhase }
+  return { pct, daysLeft, holidayName: nextHoliday.name, currentPhase: data.phase }
 }
 
 export default function CalendarToday({ data, loading, error, calYear }) {
   const retro = retrogradeStatus(calYear)
-  const progress = phaseProgress(data, calYear)
+  const progress = holidayProgress(data, calYear)
 
   return (
     <div className="card">
@@ -91,12 +87,7 @@ export default function CalendarToday({ data, loading, error, calYear }) {
                 fontSize: '0.7rem', color: 'var(--dark-muted)', marginBottom: 5,
               }}>
                 <span>{progress.currentPhase}</span>
-                <span>
-                  {progress.nextPhase
-                    ? `${progress.daysLeft}d to ${progress.nextPhase}`
-                    : `${progress.daysLeft}d remaining`
-                  }
-                </span>
+                <span>{progress.daysLeft}d to {progress.holidayName}</span>
               </div>
               <div style={{
                 width: '100%', height: 6, borderRadius: 3,
