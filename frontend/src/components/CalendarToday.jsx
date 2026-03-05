@@ -1,5 +1,13 @@
 import { fmtDate } from '../utils.js'
 
+const PHASE_ORDER = ['Morning Star', 'Superior Conjunction', 'Evening Star', 'Retrograde']
+const PHASE_COLORS = {
+  'Morning Star':         '#C5C9A8',
+  'Superior Conjunction': '#E8DEBB',
+  'Evening Star':         '#E5E8C4',
+  'Retrograde':           '#A8B8C4',
+}
+
 function retrogradeStatus(calYear) {
   if (!calYear) return null
   const today = new Date()
@@ -17,8 +25,47 @@ function retrogradeStatus(calYear) {
   return null
 }
 
+function phaseProgress(data, calYear) {
+  if (!data || !calYear?.months) return null
+
+  const currentPhase = data.phase
+  const months = calYear.months
+  const today = new Date()
+
+  // Find all consecutive months with the current phase
+  const phaseMonths = []
+  let inPhase = false
+  for (const m of months) {
+    if (m.phase === currentPhase) {
+      inPhase = true
+      phaseMonths.push(m)
+    } else if (inPhase) {
+      break // stop after the phase ends
+    }
+  }
+
+  if (!phaseMonths.length) return null
+
+  const phaseStart = new Date(phaseMonths[0].start_date + 'T00:00:00')
+  const lastMonth = phaseMonths[phaseMonths.length - 1]
+  const phaseEnd = new Date(lastMonth.end_date + 'T00:00:00')
+
+  const totalDays = (phaseEnd - phaseStart) / 86_400_000
+  const elapsed = (today - phaseStart) / 86_400_000
+  const pct = Math.max(0, Math.min(100, (elapsed / totalDays) * 100))
+  const daysLeft = Math.max(0, Math.round(totalDays - elapsed))
+
+  // Find next phase
+  const currentIdx = PHASE_ORDER.indexOf(currentPhase)
+  const nextPhase = currentIdx >= 0 ? PHASE_ORDER[(currentIdx + 1) % PHASE_ORDER.length] : null
+
+  return { pct, daysLeft, nextPhase, currentPhase }
+}
+
 export default function CalendarToday({ data, loading, error, calYear }) {
   const retro = retrogradeStatus(calYear)
+  const progress = phaseProgress(data, calYear)
+
   return (
     <div className="card">
       <div className="card-label">Today in the Venus Calendar</div>
@@ -36,12 +83,40 @@ export default function CalendarToday({ data, loading, error, calYear }) {
             <PhaseBadge phase={data.phase} />
           </div>
 
+          {/* Phase progress bar */}
+          {progress && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                fontSize: '0.7rem', color: 'var(--dark-muted)', marginBottom: 5,
+              }}>
+                <span>{progress.currentPhase}</span>
+                <span>
+                  {progress.nextPhase
+                    ? `${progress.daysLeft}d to ${progress.nextPhase}`
+                    : `${progress.daysLeft}d remaining`
+                  }
+                </span>
+              </div>
+              <div style={{
+                width: '100%', height: 6, borderRadius: 3,
+                background: 'var(--border)', overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${progress.pct}%`, height: '100%', borderRadius: 3,
+                  background: PHASE_COLORS[progress.currentPhase] || 'var(--sage)',
+                  transition: 'width 0.6s ease',
+                }} />
+              </div>
+            </div>
+          )}
+
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4 }}>
             <SmallRow label="Next New Year" value={fmtDate(data.next_new_year)} />
             {data.next_holiday_name && (
               <SmallRow
                 label={data.next_holiday_name}
-                value={`${fmtDate(data.next_holiday_date)} · in ${data.next_holiday_days}d`}
+                value={`${fmtDate(data.next_holiday_date)} \u00B7 in ${data.next_holiday_days}d`}
               />
             )}
             {retro && (
@@ -57,7 +132,7 @@ export default function CalendarToday({ data, loading, error, calYear }) {
                     {retro.label}
                   </span>
                 }
-                value={`${fmtDate(retro.date)} · in ${retro.days}d`}
+                value={`${fmtDate(retro.date)} \u00B7 in ${retro.days}d`}
                 highlight={retro.active}
               />
             )}
@@ -69,13 +144,9 @@ export default function CalendarToday({ data, loading, error, calYear }) {
 }
 
 function PhaseBadge({ phase }) {
-  const colors = {
-    'Morning Star':         { bg: '#C5C9A8', text: '#3D3D2E' },
-    'Superior Conjunction': { bg: '#E8DEBB', text: '#3D3D2E' },
-    'Evening Star':         { bg: '#E5E8C4', text: '#3D3D2E' },
-    'Retrograde':           { bg: '#A8B8C4', text: '#3D3D2E' },
-  }
-  const c = colors[phase] || { bg: 'var(--border)', text: 'var(--dark)' }
+  const c = PHASE_COLORS[phase]
+    ? { bg: PHASE_COLORS[phase], text: '#3D3D2E' }
+    : { bg: 'var(--border)', text: 'var(--dark)' }
   return (
     <span style={{
       display: 'inline-block',

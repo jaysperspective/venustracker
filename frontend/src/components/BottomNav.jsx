@@ -5,12 +5,9 @@ const TABS = [
     icon: (active) => {
       const c = active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'
       return (
-        // Compass rose — circle with N/S needle
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="9" stroke={c} strokeWidth="1.5" />
-          {/* North needle (filled) */}
           <path d="M12 4.5 L14 11.5 L12 10.5 L10 11.5 Z" fill={c} />
-          {/* South needle (dimmed) */}
           <path d="M12 19.5 L14 12.5 L12 13.5 L10 12.5 Z" fill={c} opacity="0.38" />
           <circle cx="12" cy="12" r="1.8" fill={c} />
         </svg>
@@ -21,7 +18,6 @@ const TABS = [
     id: 'info',
     label: 'Guide',
     icon: (active) => (
-      // Open book icon
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
           d="M12 6C10 4.5 7 4 4 4.5V19c3-.5 6 0 8 1.5M12 6c2-1.5 5-2 8-1.5V19c-3-.5-6 0-8 1.5M12 6v15.5"
@@ -37,7 +33,6 @@ const TABS = [
     id: 'venus',
     label: 'Venus',
     icon: (active) => (
-      // Venus symbol ♀ — circle with cross below
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="9" r="5.5" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" />
         <line x1="12" y1="14.5" x2="12" y2="21" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.8" strokeLinecap="round" />
@@ -46,30 +41,35 @@ const TABS = [
     ),
   },
   {
-    id: 'news',
-    label: 'News',
-    icon: (active) => (
-      // Newspaper icon — folded paper with lines
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="5" width="13" height="15" rx="1.5" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.6" />
-        <path d="M17 8h2a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2v-3" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.6" strokeLinecap="round" />
-        <line x1="7.5" y1="9" x2="13.5" y2="9" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.4" strokeLinecap="round" />
-        <line x1="7.5" y1="12" x2="13.5" y2="12" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.4" strokeLinecap="round" />
-        <line x1="7.5" y1="15" x2="11" y2="15" stroke={active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'} strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: 'about',
-    label: 'About',
+    id: 'tonight',
+    label: 'Tonight',
     icon: (active) => {
       const c = active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'
       return (
-        // Info circle icon
+        // Moon/star — night sky icon
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke={c} strokeWidth="1.6" />
-          <line x1="12" y1="11" x2="12" y2="17" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="12" cy="8" r="1.1" fill={c} />
+          <path
+            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+          />
+          <circle cx="17.5" cy="6.5" r="1" fill={c} />
+          <circle cx="19" cy="10" r="0.6" fill={c} opacity="0.6" />
+        </svg>
+      )
+    },
+  },
+  {
+    id: 'log',
+    label: 'Log',
+    icon: (active) => {
+      const c = active ? '#C5C9A8' : 'rgba(245,237,208,0.4)'
+      return (
+        // Notebook/pencil icon
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="3" width="14" height="18" rx="2" stroke={c} strokeWidth="1.6" />
+          <line x1="9" y1="7" x2="15" y2="7" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
+          <line x1="9" y1="10.5" x2="15" y2="10.5" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
+          <line x1="9" y1="14" x2="12" y2="14" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
         </svg>
       )
     },

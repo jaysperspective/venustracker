@@ -52,69 +52,56 @@ export default function ObserverInput({ lat, lon, onUpdate }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-      {/* Location search */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <span style={labelStyle}>LOCATION</span>
-        <div style={{ position: 'relative' }}>
-          <input
-            type="text"
-            placeholder="e.g. Danville, Virginia"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            style={{ ...searchStyle, paddingRight: status === 'resolving' ? 28 : 8 }}
-          />
-          {status === 'resolving' && (
-            <span style={spinnerStyle}>⟳</span>
-          )}
-        </div>
-        {status === 'found' && resolved && (
-          <span style={hintStyle} title={resolved.display}>
-            {resolved.lat.toFixed(4)}, {resolved.lon.toFixed(4)}
-          </span>
-        )}
-        {status === 'error' && (
-          <span style={{ ...hintStyle, color: '#C0826A' }}>Location not found</span>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ position: 'relative' }}>
+        <input
+          type="text"
+          placeholder="Search city or place..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          style={{ ...searchStyle, paddingRight: status === 'resolving' ? 32 : 10 }}
+        />
+        {status === 'resolving' && (
+          <span style={spinnerStyle}>&#x27F3;</span>
         )}
       </div>
-
-      <button type="submit" style={btnStyle}>Update</button>
+      {status === 'found' && resolved && (
+        <span style={hintStyle} title={resolved.display}>
+          {resolved.display.split(',').slice(0, 2).join(',')}
+        </span>
+      )}
+      {status === 'error' && (
+        <span style={{ ...hintStyle, color: '#C0826A' }}>Location not found</span>
+      )}
+      <button type="submit" style={btnStyle}>Update Location</button>
     </form>
   )
 }
 
-const labelStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 3,
-  color: 'var(--sand)',
-  fontSize: '0.65rem',
-  letterSpacing: '0.1em',
-}
 
 const searchStyle = {
-  width: 200,
-  padding: '5px 8px',
+  width: '100%',
+  padding: '8px 10px',
   background: 'rgba(255,255,255,0.1)',
   border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: 4,
+  borderRadius: 6,
   color: 'var(--cream)',
-  fontSize: '0.85rem',
+  fontSize: '16px', // prevents iOS viewport zoom on focus
   outline: 'none',
 }
 
 
 const btnStyle = {
-  padding: '5px 14px',
-  marginBottom: 1,
+  padding: '10px 14px',
   background: 'var(--sage)',
   border: 'none',
-  borderRadius: 4,
+  borderRadius: 6,
   color: 'var(--dark)',
-  fontSize: '0.8rem',
+  fontSize: '0.85rem',
+  fontWeight: 600,
   cursor: 'pointer',
   letterSpacing: '0.06em',
-  alignSelf: 'flex-end',
+  width: '100%',
 }
 
 const hintStyle = {

@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
-import ObserverInput from './components/ObserverInput.jsx'
 import VenusHero from './components/VenusHero.jsx'
 import CalendarToday from './components/CalendarToday.jsx'
 import EventsList from './components/EventsList.jsx'
 import EphemerisChart from './components/EphemerisChart.jsx'
 import CalendarGrid from './components/CalendarGrid.jsx'
 import BottomNav from './components/BottomNav.jsx'
-const InfoPage   = lazy(() => import('./pages/InfoPage.jsx'))
-const NewsPage   = lazy(() => import('./pages/NewsPage.jsx'))
-const SkyFinder  = lazy(() => import('./pages/SkyFinder.jsx'))
-const AboutPage  = lazy(() => import('./pages/AboutPage.jsx'))
+const InfoPage    = lazy(() => import('./pages/InfoPage.jsx'))
+const TonightPage = lazy(() => import('./pages/TonightPage.jsx'))
+const LogPage     = lazy(() => import('./pages/LogPage.jsx'))
+const SkyFinder   = lazy(() => import('./pages/SkyFinder.jsx'))
 import {
   fetchVenus,
   fetchEvents,
@@ -188,16 +187,10 @@ export default function App() {
     <>
       {tab === 'venus' && (
         <main className="app-main">
-          {/* Location bar */}
-          <div style={{
-            background: '#3D3D2E',
-            borderRadius: 10,
-            padding: '10px 16px',
-          }}>
-            <ObserverInput lat={lat} lon={lon} onUpdate={handleUpdate} />
-          </div>
-
-          <VenusHero data={venus.data} loading={venus.loading} error={venus.error} />
+          <VenusHero
+            data={venus.data} loading={venus.loading} error={venus.error}
+            lat={lat} lon={lon} onUpdateLocation={handleUpdate}
+          />
 
           <CalendarToday
             data={calToday.data}
@@ -231,15 +224,19 @@ export default function App() {
         </Suspense>
       )}
 
-      {tab === 'news' && (
+      {tab === 'tonight' && (
         <Suspense fallback={suspenseFallback}>
-          <NewsPage venusData={venus.data} />
+          <TonightPage
+            venusData={venus.data}
+            moonData={sky.data?.moon}
+            sunData={sky.data?.sun}
+          />
         </Suspense>
       )}
 
-      {tab === 'about' && (
+      {tab === 'log' && (
         <Suspense fallback={suspenseFallback}>
-          <AboutPage />
+          <LogPage venusData={venus.data} />
         </Suspense>
       )}
 

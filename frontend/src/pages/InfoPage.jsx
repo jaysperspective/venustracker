@@ -106,6 +106,40 @@ const CULTURES = [
   },
 ]
 
+const legalStyle = {
+  fontSize: '0.82rem', color: 'var(--dark)', lineHeight: 1.7, marginBottom: 10, marginTop: 0,
+}
+
+function CollapsibleLegal({ title, children }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{
+      background: 'var(--sand)', border: '1px solid var(--border)',
+      borderRadius: 10, marginBottom: 10, overflow: 'hidden',
+    }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', padding: '12px 16px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          color: 'var(--dark)', fontSize: '0.82rem', fontWeight: 500,
+        }}
+      >
+        {title}
+        <span style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', color: 'var(--dark-muted)' }}>
+          &#x203A;
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 16px 14px' }}>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function VenusRose({ size = 300, showLabel = true }) {
   const cx = 200, cy = 200
   const rV = 0.723, rE = 1.0
@@ -150,10 +184,11 @@ function VenusRose({ size = 300, showLabel = true }) {
 const NAV_SECTIONS = [
   { id: 'cycle',          label: 'The Cycle' },
   { id: 'two-stars',      label: 'Two Stars' },
-  { id: 'morning-evening',label: 'Morning · Evening' },
+  { id: 'morning-evening',label: 'Morning \u00B7 Evening' },
   { id: 'forty-days',     label: '40 Days' },
   { id: 'cultures',       label: 'Cultures' },
   { id: 'houses',         label: 'Houses' },
+  { id: 'about',          label: 'About' },
 ]
 
 function SectionNav() {
@@ -492,6 +527,35 @@ export default function InfoPage() {
           })}
         </div>
         {HOUSES.map(h => <HouseCard key={h.number} h={h} />)}
+      </Section>
+
+      {/* About & Legal */}
+      <Section id="about" title="About Venus Tracker">
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ fontSize: '1.2rem', fontFamily: 'Georgia, serif', color: 'var(--dark)', marginBottom: 4 }}>
+            Venus Tracker
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--dark-muted)', marginBottom: 2 }}>Version 1.0.0</div>
+          <div style={{ fontSize: '0.82rem', color: 'var(--dark-muted)', fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>
+            Astronomy & astrology companion for Venus
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--dark-muted)', marginTop: 6 }}>Created by Esaias</div>
+        </div>
+
+        <CollapsibleLegal title="Privacy Policy">
+          <p style={legalStyle}><strong>Location data</strong> — Your location is used on-device only to calculate the positions of Venus and the Moon relative to your sky. It is never transmitted to third parties and is never stored on our servers.</p>
+          <p style={legalStyle}><strong>Camera</strong> — The camera is used only for the Sky Finder live viewfinder overlay. No images are captured, stored, or transmitted.</p>
+          <p style={legalStyle}><strong>Analytics</strong> — Venus Tracker does not collect any analytics, usage data, or personal information.</p>
+          <p style={legalStyle}><strong>Third-party services</strong> — The app connects to Nominatim (OpenStreetMap) for reverse geocoding and JPL Horizons for astronomical data. These requests are anonymous.</p>
+          <p style={{ ...legalStyle, marginBottom: 0 }}>No cookies, no tracking, no advertising.</p>
+        </CollapsibleLegal>
+
+        <CollapsibleLegal title="Terms of Service">
+          <p style={legalStyle}>Venus Tracker is provided "as is" without warranty of any kind, express or implied.</p>
+          <p style={legalStyle}>All astronomical and astrological data is for informational and educational purposes only.</p>
+          <p style={legalStyle}>We are not responsible for the accuracy of data provided by third-party sources.</p>
+          <p style={{ ...legalStyle, marginBottom: 0 }}>By using this app, you assume all risk. Continued use constitutes acceptance of any changes to these terms.</p>
+        </CollapsibleLegal>
       </Section>
 
     </div>
