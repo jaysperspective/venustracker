@@ -83,3 +83,110 @@ export async function fetchNews(category = 'all') {
     return res.json()
   })
 }
+
+// ─── Device identity ────────────────────────────────────────────────────────
+
+function getDeviceId() {
+  let id = localStorage.getItem('vt_device_id')
+  if (!id) {
+    id = crypto.randomUUID?.() || (Date.now().toString(36) + Math.random().toString(36).slice(2))
+    localStorage.setItem('vt_device_id', id)
+  }
+  return id
+}
+
+export function getDisplayName() {
+  return localStorage.getItem('vt_display_name') || ''
+}
+
+export function setDisplayName(name) {
+  localStorage.setItem('vt_display_name', name)
+}
+
+// ─── Community log ──────────────────────────────────────────────────────────
+
+export async function fetchLog({ limit = 50, offset = 0, mine = false } = {}) {
+  const params = new URLSearchParams({ limit, offset })
+  if (mine) params.set('mine', 'true')
+  const res = await fetch(`${BASE}/api/log?${params}`, {
+    headers: { 'X-Device-Id': getDeviceId() },
+  })
+  if (!res.ok) throw new Error(`Log fetch failed: ${res.status}`)
+  return res.json()
+}
+
+export async function postLog(observation) {
+  const res = await fetch(`${BASE}/api/log`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Device-Id': getDeviceId(),
+    },
+    body: JSON.stringify(observation),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || `Post failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function deleteLog(obsId) {
+  const res = await fetch(`${BASE}/api/log/${obsId}`, {
+    method: 'DELETE',
+    headers: { 'X-Device-Id': getDeviceId() },
+  })
+  if (!res.ok) throw new Error(`Delete failed: ${res.status}`)
+  return res.json()
+}
+
+export function logImageUrl(filename) {
+  return `${BASE}/api/log/images/${filename}`
+}
+
+// ─── Admin moderation ───────────────────────────────────────────────────────
+
+export function getAdminSecret() {
+  return localStorage.getItem('vt_admin_secret') || ''
+}
+
+export function setAdminSecret(secret) {
+  localStorage.setItem('vt_admin_secret', secret)
+}
+
+export async function fetchPending({ limit = 50, offset = 0 } = {}) {
+  const secret = getAdminSecret()
+  const params = new URLSearchParams({ limit, offset })
+  const res = await fetch(`${BASE}/api/admin/log/pending?${params}`, {
+    headers: { 'X-Admin-Secret': secret },
+  })
+  if (!res.ok) throw new Error(`Pending fetch failed: ${res.status}`)
+  return res.json()
+}
+
+export async function approveLog(obsId) {
+  const res = await fetch(`${BASE}/api/admin/log/${obsId}/approve`, {
+    method: 'POST',
+    headers: { 'X-Admin-Secret': getAdminSecret() },
+  })
+  if (!res.ok) throw new Error(`Approve failed: ${res.status}`)
+  return res.json()
+}
+
+export async function rejectLog(obsId) {
+  const res = await fetch(`${BASE}/api/admin/log/${obsId}/reject`, {
+    method: 'POST',
+    headers: { 'X-Admin-Secret': getAdminSecret() },
+  })
+  if (!res.ok) throw new Error(`Reject failed: ${res.status}`)
+  return res.json()
+}
+
+export async function adminDeleteLog(obsId) {
+  const res = await fetch(`${BASE}/api/admin/log/${obsId}`, {
+    method: 'DELETE',
+    headers: { 'X-Admin-Secret': getAdminSecret() },
+  })
+  if (!res.ok) throw new Error(`Admin delete failed: ${res.status}`)
+  return res.json()
+}

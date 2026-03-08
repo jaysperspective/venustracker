@@ -15,8 +15,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -24,12 +26,26 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from venustracker.service import AstronomicalService
 
+from backend.database import (
+    init_db, create_observation, list_observations,
+    count_observations, delete_observation,
+    device_post_count_today, list_pending, count_pending,
+    approve_observation, reject_observation, admin_delete_observation,
+    UPLOADS_DIR, MAX_IMAGES_PER_OBS, MAX_IMAGE_BYTES,
+    MAX_NOTE_LENGTH, MAX_NAME_LENGTH, MAX_POSTS_PER_DEVICE_PER_DAY,
+)
+
+_ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
+
 _origins = [o.strip() for o in os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173,capacitor://localhost"
 ).split(",") if o.strip()]
 
 app = FastAPI(title="VenusTracker API", version="1.0.0")
+
+# Initialize database on startup
+init_db()
 
 
 _TRUSTED_PROXIES = set(
@@ -63,7 +79,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "default-src 'self' capacitor://localhost; "
             "connect-src 'self' https://venustracker-production.up.railway.app "
             "https://nominatim.openstreetmap.org https://news.google.com; "
-            "img-src 'self' data:; "
+            "img-src 'self' data: blob: https://venustracker-production.up.railway.app; "
             "style-src 'self' 'unsafe-inline'; "
             "frame-ancestors 'none'"
         )
@@ -74,8 +90,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
-    allow_methods=["GET"],
-    allow_headers=["Accept", "Content-Type"],
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Accept", "Content-Type", "X-Device-Id", "X-Admin-Secret"],
 )
 
 
@@ -420,3 +436,274 @@ def get_calendar_year(
     svc = AstronomicalService(observer_lat=lat, observer_lon=lon)
     cy = svc.calendar_year(year)
     return _serialize_calendar_year(cy)
+
+
+# ---------------------------------------------------------------------------
+# Community Observation Log
+# ---------------------------------------------------------------------------
+
+class VenusDataPayload(BaseModel):
+    altitude: float | None = None
+    azimuth: float | None = None
+    elongation: float | None = None
+    magnitude: float | None = None
+    illumination: float | None = None
+    phase: str | None = None
+    zodiac: str | None = None
+    is_evening_star: bool | None = None
+
+
+class ObservationCreate(BaseModel):
+    display_name: str = Field(default="", max_length=MAX_NAME_LENGTH)
+    notes: str = Field(default="", max_length=MAX_NOTE_LENGTH)
+    condition: str = Field(default="Clear", max_length=30)
+    rating: int = Field(default=3, ge=1, le=5)
+    naked_eye: bool = True
+    image: str | None = Field(default=None)  # single base64 data URL
+    venus: VenusDataPayload | None = None
+
+
+def _validate_device_id(device_id: str | None) -> str:
+    """Validate device ID is a reasonable UUID-like string."""
+    if not device_id or len(device_id) < 8 or len(device_id) > 64:
+        raise ValueError("Invalid device ID")
+    import re as _re
+    if not _re.match(r'^[a-zA-Z0-9_-]+$', device_id):
+        raise ValueError("Invalid device ID format")
+    return device_id
+
+
+_MAX_IMAGE_PX = 800
+_JPEG_QUALITY = 75
+
+
+def _save_base64_image(data_url: str) -> str | None:
+    """Decode a base64 data URL, re-compress with Pillow, save as JPEG. Returns filename."""
+    import base64
+    import io
+    import uuid
+    from PIL import Image
+
+    if not data_url.startswith("data:image/"):
+        return None
+
+    try:
+        header, b64data = data_url.split(",", 1)
+    except ValueError:
+        return None
+
+    # Validate mime type
+    mime = header.split(";")[0].replace("data:", "")
+    if mime not in ("image/jpeg", "image/png", "image/webp"):
+        return None
+
+    raw = base64.b64decode(b64data)
+    if len(raw) > MAX_IMAGE_BYTES:
+        return None
+
+    try:
+        img = Image.open(io.BytesIO(raw))
+        img = img.convert("RGB")  # strip alpha, normalize
+
+        # Resize if larger than max
+        w, h = img.size
+        if w > _MAX_IMAGE_PX or h > _MAX_IMAGE_PX:
+            ratio = min(_MAX_IMAGE_PX / w, _MAX_IMAGE_PX / h)
+            img = img.resize((round(w * ratio), round(h * ratio)), Image.LANCZOS)
+
+        # Save as compressed JPEG
+        filename = f"{uuid.uuid4().hex}.jpg"
+        out_path = UPLOADS_DIR / filename
+        img.save(out_path, "JPEG", quality=_JPEG_QUALITY, optimize=True)
+        return filename
+    except Exception as exc:
+        log.warning("Image processing failed: %s", exc)
+        return None
+
+
+def _check_admin(secret: str | None) -> bool:
+    if not _ADMIN_SECRET:
+        return False
+    return secret == _ADMIN_SECRET
+
+
+@app.post("/api/log")
+@limiter.limit("5/minute")
+def create_log_entry(
+    request: Request,
+    body: ObservationCreate,
+    x_device_id: str | None = Header(default=None),
+) -> dict:
+    """Create a new community observation (pending approval)."""
+    import uuid
+    from datetime import datetime
+    from fastapi.responses import JSONResponse
+
+    try:
+        device_id = _validate_device_id(x_device_id)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"error": "Missing or invalid X-Device-Id header"})
+
+    # Per-device daily limit
+    if device_post_count_today(device_id) >= MAX_POSTS_PER_DEVICE_PER_DAY:
+        return JSONResponse(status_code=429, content={"error": "Daily post limit reached. Try again tomorrow."})
+
+    # Save single image (server-side Pillow re-compress)
+    image_filenames = []
+    if body.image:
+        fname = _save_base64_image(body.image)
+        if fname:
+            image_filenames.append(fname)
+
+    venus_data = body.venus.model_dump() if body.venus else {}
+
+    obs = create_observation(
+        obs_id=uuid.uuid4().hex[:16],
+        device_id=device_id,
+        display_name=body.display_name.strip(),
+        timestamp=datetime.utcnow().isoformat() + "Z",
+        notes=body.notes.strip(),
+        condition=body.condition,
+        rating=body.rating,
+        naked_eye=body.naked_eye,
+        image_filenames=image_filenames,
+        venus_data=venus_data,
+    )
+    return obs
+
+
+@app.get("/api/log")
+@limiter.limit("30/minute")
+def get_log_entries(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    mine: bool = Query(default=False),
+    x_device_id: str | None = Header(default=None),
+) -> dict:
+    """Return community observations (approved only), newest first."""
+    device_filter = None
+    if mine and x_device_id:
+        try:
+            device_filter = _validate_device_id(x_device_id)
+        except ValueError:
+            device_filter = None
+
+    entries = list_observations(limit=limit, offset=offset, device_id=device_filter, approved_only=True)
+    total = count_observations(device_id=device_filter, approved_only=True)
+    return {"entries": entries, "total": total}
+
+
+@app.delete("/api/log/{obs_id}")
+@limiter.limit("10/minute")
+def delete_log_entry(
+    request: Request,
+    obs_id: str,
+    x_device_id: str | None = Header(default=None),
+) -> dict:
+    """Delete an observation (only if it belongs to the requesting device)."""
+    from fastapi.responses import JSONResponse
+
+    try:
+        device_id = _validate_device_id(x_device_id)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"error": "Missing or invalid X-Device-Id header"})
+
+    if delete_observation(obs_id, device_id):
+        return {"deleted": True}
+    return JSONResponse(status_code=404, content={"error": "Observation not found or not yours"})
+
+
+@app.get("/api/log/images/{filename}")
+def get_log_image(filename: str):
+    """Serve an uploaded observation image."""
+    import re as _re
+    from fastapi.responses import JSONResponse
+
+    if not _re.match(r'^[a-f0-9]+\.(jpg|png|webp)$', filename):
+        return JSONResponse(status_code=400, content={"error": "Invalid filename"})
+
+    path = UPLOADS_DIR / filename
+    if not path.exists() or not path.is_file():
+        return JSONResponse(status_code=404, content={"error": "Image not found"})
+
+    media_types = {".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+    media_type = media_types.get(path.suffix, "application/octet-stream")
+    return FileResponse(path, media_type=media_type, headers={"Cache-Control": "public, max-age=86400"})
+
+
+# ---------------------------------------------------------------------------
+# Admin moderation (protected by ADMIN_SECRET env var)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/admin/log/pending")
+@limiter.limit("30/minute")
+def admin_get_pending(
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    x_admin_secret: str | None = Header(default=None),
+) -> dict:
+    """Return observations awaiting approval. Requires admin secret."""
+    from fastapi.responses import JSONResponse
+
+    if not _check_admin(x_admin_secret):
+        return JSONResponse(status_code=403, content={"error": "Forbidden"})
+
+    entries = list_pending(limit=limit, offset=offset)
+    total = count_pending()
+    return {"entries": entries, "total": total}
+
+
+@app.post("/api/admin/log/{obs_id}/approve")
+@limiter.limit("30/minute")
+def admin_approve(
+    request: Request,
+    obs_id: str,
+    x_admin_secret: str | None = Header(default=None),
+) -> dict:
+    """Approve a pending observation."""
+    from fastapi.responses import JSONResponse
+
+    if not _check_admin(x_admin_secret):
+        return JSONResponse(status_code=403, content={"error": "Forbidden"})
+
+    if approve_observation(obs_id):
+        return {"approved": True}
+    return JSONResponse(status_code=404, content={"error": "Observation not found"})
+
+
+@app.post("/api/admin/log/{obs_id}/reject")
+@limiter.limit("30/minute")
+def admin_reject(
+    request: Request,
+    obs_id: str,
+    x_admin_secret: str | None = Header(default=None),
+) -> dict:
+    """Reject (delete) a pending observation."""
+    from fastapi.responses import JSONResponse
+
+    if not _check_admin(x_admin_secret):
+        return JSONResponse(status_code=403, content={"error": "Forbidden"})
+
+    if reject_observation(obs_id):
+        return {"rejected": True}
+    return JSONResponse(status_code=404, content={"error": "Observation not found"})
+
+
+@app.delete("/api/admin/log/{obs_id}")
+@limiter.limit("30/minute")
+def admin_delete(
+    request: Request,
+    obs_id: str,
+    x_admin_secret: str | None = Header(default=None),
+) -> dict:
+    """Admin delete any observation regardless of ownership."""
+    from fastapi.responses import JSONResponse
+
+    if not _check_admin(x_admin_secret):
+        return JSONResponse(status_code=403, content={"error": "Forbidden"})
+
+    if admin_delete_observation(obs_id):
+        return {"deleted": True}
+    return JSONResponse(status_code=404, content={"error": "Observation not found"})

@@ -3,3 +3,4 @@ uvicorn[standard]>=0.29
 python-dotenv>=1.0
 slowapi>=0.1.9
 defusedxml>=0.7
+Pillow>=10.0

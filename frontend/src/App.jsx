@@ -90,7 +90,7 @@ function AcceptanceGate({ onAccept }) {
             Your location is used on-device only to calculate Venus and Moon positions. It is never transmitted to third parties or stored on our servers.
           </p>
           <p style={gateParaStyle}>
-            The camera is used only for the Sky Finder viewfinder. No images are captured or stored. News is fetched anonymously from Google News RSS. No analytics, cookies, tracking, or advertising.
+            The camera is used for the Sky Finder viewfinder and optionally for observation photos shared to the community log. Photos you upload are stored on our server and visible to all users. News is fetched anonymously from Google News RSS. No analytics, cookies, tracking, or advertising.
           </p>
           <p style={gateParaStyle}>
             Third-party services: Nominatim (reverse geocoding) and JPL Horizons (astronomical data) — all requests are anonymous.
