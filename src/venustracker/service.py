@@ -12,7 +12,7 @@ import pandas as pd
 from venustracker.config import DEFAULT_LAT, DEFAULT_LON, DEFAULT_FOV_DEG
 from venustracker.core.venus import VenusStatus, current_status
 from venustracker.core.ephemeris import get_ephemeris_table
-from venustracker.core.coordinates import angular_separation
+from venustracker.core.coordinates import angular_separation, format_ra, format_dec
 
 log = logging.getLogger(__name__)
 
@@ -228,8 +228,8 @@ class AstronomicalService:
         return {
             "ra": pos.ra,
             "dec": pos.dec,
-            "ra_formatted": __import__("venustracker.core.coordinates", fromlist=["format_ra"]).format_ra(pos.ra),
-            "dec_formatted": __import__("venustracker.core.coordinates", fromlist=["format_dec"]).format_dec(pos.dec),
+            "ra_formatted": format_ra(pos.ra),
+            "dec_formatted": format_dec(pos.dec),
             "altitude": status.altitude,
             "azimuth": status.azimuth,
             "elongation_deg": status.elongation,

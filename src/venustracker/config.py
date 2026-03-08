@@ -1,5 +1,6 @@
 """Paths, constants, and per-source cache TTLs."""
 
+import os
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -17,10 +18,10 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 # Cache TTLs (seconds)
 # ---------------------------------------------------------------------------
 
-TTL_HORIZONS = 3_600          # 1 hour  — ephemerides change slowly
-TTL_VIZIER = 86_400           # 24 hours — star catalogues are static
-TTL_COBS = 1_800              # 30 min  — comet obs updated frequently
-TTL_DSS = 7 * 86_400          # 7 days  — DSS images never change
+TTL_HORIZONS = int(os.getenv("TTL_HORIZONS", 3_600))      # 1 hour
+TTL_VIZIER = int(os.getenv("TTL_VIZIER", 86_400))        # 24 hours
+TTL_COBS = int(os.getenv("TTL_COBS", 1_800))             # 30 min
+TTL_DSS = int(os.getenv("TTL_DSS", 7 * 86_400))          # 7 days
 
 # ---------------------------------------------------------------------------
 # JPL Horizons

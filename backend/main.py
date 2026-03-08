@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import html
+import logging
 import re
 import defusedxml.ElementTree as ET
 from datetime import date
 from typing import Any, Literal
+
+log = logging.getLogger(__name__)
 
 import os
 from dotenv import load_dotenv
@@ -28,9 +32,19 @@ _origins = [o.strip() for o in os.getenv(
 app = FastAPI(title="VenusTracker API", version="1.0.0")
 
 
+_TRUSTED_PROXIES = set(
+    p.strip() for p in os.getenv("TRUSTED_PROXIES", "").split(",") if p.strip()
+)
+
+
 def _real_ip(request: Request) -> str:
-    xff = request.headers.get("X-Forwarded-For")
-    return xff.split(",")[0].strip() if xff else get_remote_address(request)
+    if _TRUSTED_PROXIES:
+        client_ip = get_remote_address(request)
+        if client_ip in _TRUSTED_PROXIES:
+            xff = request.headers.get("X-Forwarded-For")
+            if xff:
+                return xff.split(",")[0].strip()
+    return get_remote_address(request)
 
 
 limiter = Limiter(key_func=_real_ip)
@@ -50,7 +64,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "connect-src 'self' https://venustracker-production.up.railway.app "
             "https://nominatim.openstreetmap.org https://news.google.com; "
             "img-src 'self' data:; "
-            "style-src 'self' 'unsafe-inline'"
+            "style-src 'self' 'unsafe-inline'; "
+            "frame-ancestors 'none'"
         )
         return response
 
@@ -181,7 +196,8 @@ def get_venus(
 
     try:
         rise_set = _venus_rise_set(lat, lon)
-    except Exception:
+    except Exception as exc:
+        log.warning("Venus rise/set calculation failed: %s", exc)
         rise_set = {"rise_time": None, "set_time": None}
 
     return {
@@ -223,7 +239,8 @@ def get_ephemeris(
             # JPL Horizons returns elongation directly in the 'elong' column
             elong = float(df.iloc[i]["elong"])
             result.append({"date": dt_str, "elongation": round(elong, 2)})
-        except Exception:
+        except (KeyError, ValueError, TypeError) as exc:
+            log.debug("Skipping ephemeris row %d: %s", i, exc)
             continue
 
     return result
@@ -303,7 +320,7 @@ def get_news(request: Request, category: Literal["all", "astronomy", "astrology"
     def _pub_ts(a: dict) -> float:
         try:
             return parsedate_to_datetime(a["published"]).timestamp()
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             return 0.0
 
     articles.sort(key=_pub_ts, reverse=True)
@@ -319,7 +336,11 @@ def _fetch_rss(url: str, category: str) -> list[dict]:
         resp = httpx.get(url, timeout=10, follow_redirects=True, headers={"User-Agent": "VenusTracker/1.0"})
         resp.raise_for_status()
         root = ET.fromstring(resp.text)
-    except Exception:
+    except httpx.HTTPError as exc:
+        log.warning("RSS fetch failed for %s: %s", category, exc)
+        return []
+    except ET.ParseError as exc:
+        log.warning("RSS XML parse failed for %s: %s", category, exc)
         return []
 
     ns = {"source": "http://www.google.com/schemas/sitemap/0.84"}
@@ -330,7 +351,7 @@ def _fetch_rss(url: str, category: str) -> list[dict]:
         link = (item.findtext("link") or "").strip()
         pub_date = (item.findtext("pubDate") or "").strip()
         raw_desc = item.findtext("description") or ""
-        summary = re.sub(r"<[^>]+>", "", raw_desc).strip()
+        summary = html.unescape(re.sub(r"<[^>]+>", "", raw_desc)).strip()
 
         source_el = item.find("source")
         source = source_el.text.strip() if source_el is not None and source_el.text else ""
@@ -391,7 +412,7 @@ def get_sky(
 @limiter.limit("10/minute")
 def get_calendar_year(
     request: Request,
-    year: int = Query(default=2026),
+    year: int = Query(default=2026, ge=1900, le=2200),
     lat: float = Query(default=0.0, ge=-90.0, le=90.0),
     lon: float = Query(default=0.0, ge=-180.0, le=180.0),
 ) -> dict:

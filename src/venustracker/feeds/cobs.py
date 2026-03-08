@@ -47,9 +47,14 @@ def get_recent_observations(
     -------
     pd.DataFrame with observation columns, or empty DataFrame on failure.
     """
+    import re as _re
+
     from_date = (datetime.utcnow() - timedelta(days=days_back)).strftime("%Y-%m-%d 00:00")
     params: dict = {"format": "json", "from_date": from_date}
     if comet:
+        if len(comet) > 50 or not _re.match(r'^[A-Za-z0-9 /\-().+]+$', comet):
+            log.warning("Invalid comet designation rejected: %r", comet[:60])
+            return pd.DataFrame()
         params["des"] = comet
 
     log.debug("COBS request: %s params=%s", _BASE_URL, params)

@@ -68,7 +68,12 @@ function CategoryBadge({ category }) {
 }
 
 function safeHref(url) {
-  return /^https?:\/\//i.test(url) ? url : '#'
+  try {
+    const parsed = new URL(url)
+    return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? url : '#'
+  } catch {
+    return '#'
+  }
 }
 
 function ArticleCard({ article }) {

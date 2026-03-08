@@ -5,6 +5,10 @@ function qs(lat, lon, extra = {}) {
   return params.toString()
 }
 
+function safeParse(raw) {
+  try { return JSON.parse(raw) } catch { return null }
+}
+
 // ─── Offline cache wrapper ──────────────────────────────────────────────────
 
 async function cachedFetch(key, fetchFn) {
@@ -14,7 +18,10 @@ async function cachedFetch(key, fetchFn) {
     return data
   } catch (err) {
     const cached = localStorage.getItem(key)
-    if (cached) return JSON.parse(cached)
+    if (cached) {
+      const parsed = safeParse(cached)
+      if (parsed !== null) return parsed
+    }
     throw err
   }
 }

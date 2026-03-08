@@ -1,16 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
 
+let _lastGeocode = 0
+
 async function geocode(query) {
+  // Enforce 1 req/sec to respect Nominatim ToS
+  const now = Date.now()
+  const wait = Math.max(0, 1000 - (now - _lastGeocode))
+  if (wait > 0) await new Promise(r => setTimeout(r, wait))
+  _lastGeocode = Date.now()
+
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
   const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'VenusTracker/1.0' } })
   if (!res.ok) throw new Error('Geocoding request failed')
   const data = await res.json()
   if (!data.length) throw new Error('Location not found')
-  return {
-    lat: parseFloat(data[0].lat),
-    lon: parseFloat(data[0].lon),
-    display: data[0].display_name,
+  const lat = parseFloat(data[0].lat)
+  const lon = parseFloat(data[0].lon)
+  if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    throw new Error('Invalid coordinates returned')
   }
+  return { lat, lon, display: data[0].display_name }
 }
 
 export default function ObserverInput({ lat, lon, onUpdate }) {
